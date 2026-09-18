@@ -180,24 +180,35 @@ router.get('/numbers', async (req, res) => {
       )`;
     }
     const { rows } = await pool.query(`
-      SELECT
-        wa_number,
-        MAX(timestamp) AS last_message_time,
-        COUNT(*) AS message_count
-      FROM coexistence.chat_history
-      WHERE timestamp >= NOW() - ${DEFAULT_DATA_WINDOW} ${extraFilter}
-        -- Only surface numbers that are still connected WhatsApp accounts, so
-        -- data from a previously-connected number (after the account is edited
-        -- to a new number or removed) stops showing. The rows stay in the DB —
-        -- this just hides orphaned numbers from the picker. Digits-only match
-        -- tolerates '+'/spaces in stored display_phone_number.
-        AND regexp_replace(wa_number, '[^0-9]', '', 'g') IN (
-          SELECT regexp_replace(display_phone_number, '[^0-9]', '', 'g')
-          FROM coexistence.whatsapp_accounts
-          WHERE display_phone_number IS NOT NULL
-        )
-      GROUP BY wa_number
-      ORDER BY last_message_time DESC
+      WITH active_history AS (
+        SELECT
+          wa_number,
+          MAX(timestamp) AS last_message_time,
+          COUNT(*) AS message_count
+        FROM coexistence.chat_history
+        WHERE timestamp >= NOW() - ${DEFAULT_DATA_WINDOW} ${extraFilter}
+          AND regexp_replace(wa_number, '[^0-9]', '', 'g') IN (
+            SELECT regexp_replace(display_phone_number, '[^0-9]', '', 'g')
+            FROM coexistence.whatsapp_accounts
+            WHERE display_phone_number IS NOT NULL
+          )
+        GROUP BY wa_number
+      ),
+      active_accounts AS (
+        SELECT 
+          display_phone_number AS wa_number,
+          NULL::timestamptz AS last_message_time,
+          0::bigint AS message_count
+        FROM coexistence.whatsapp_accounts
+        WHERE display_phone_number IS NOT NULL
+      )
+      SELECT * FROM active_history
+      UNION ALL
+      SELECT * FROM active_accounts
+      WHERE regexp_replace(wa_number, '[^0-9]', '', 'g') NOT IN (
+        SELECT regexp_replace(wa_number, '[^0-9]', '', 'g') FROM active_history
+      )
+      ORDER BY last_message_time DESC NULLS LAST
     `, params);
 
     // Unread chats per wa_number = conversations with >=1 incoming message newer
