@@ -1,11 +1,11 @@
 {
-  "name": "forgechat-mcp",
+  "name": "ridemitr-wa-mcp",
   "version": "1.2.1",
   "author": "sthirumalairajan2212",
-  "description": "MCP server for building and managing ForgeChat WhatsApp AI agents from Claude Desktop.",
+  "description": "MCP server for building and managing RideMitr WA WhatsApp AI agents from Claude Desktop.",
   "type": "module",
   "bin": {
-    "forgechat-mcp": "src/index.js"
+    "ridemitr-wa-mcp": "src/index.js"
   },
   "main": "src/index.js",
   "scripts": {

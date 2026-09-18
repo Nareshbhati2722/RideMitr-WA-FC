@@ -240,7 +240,7 @@ const BUILTIN_VARS = [
   { key: "contact_number", description: "Contact phone number (alias)" },
 ];
 
-// Normalize a ForgeCRM field name into a {{variable}} token key.
+// Normalize a RideMitr WA field name into a {{variable}} token key.
 // MUST stay identical to fieldVarKey() in backend automationEngine.js so the
 // token this picker inserts is the token the engine resolves at runtime.
 // "Date of Birth" -> "date_of_birth", "city" -> "city".
@@ -260,7 +260,7 @@ const VarPickerButton = ({ onInsert, style }) => {
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [open]);
-  // Custom contact fields from ForgeCRM (Admin Settings → Fields), as variable
+  // Custom contact fields from RideMitr WA (Admin Settings → Fields), as variable
   // tokens. Deduped against the built-ins and each other by normalized key.
   const customVars = [];
   const seen = new Set(BUILTIN_VARS.map(v => v.key));
@@ -2011,7 +2011,7 @@ const SettingsPanel = ({ node, nodes=[], edges=[], onUpdateNode=()=>{}, onDelete
         icon: IC.qr, color: "#6A3FAF", bg: "#E8E0F8", border: "#B5A4DD",
         source: "wa", sourceLabel: "WhatsApp inbound message webhook",
         title: "QR code scan",
-        body: "Technically identical to a click-to-chat link — the QR encodes a wa.me URL with a pre-filled message that identifies the scan source. WhatsApp doesn't know it came from a QR; ForgeChat attributes it via the pre-filled text."
+        body: "Technically identical to a click-to-chat link — the QR encodes a wa.me URL with a pre-filled message that identifies the scan source. WhatsApp doesn't know it came from a QR; RideMitr WA attributes it via the pre-filled text."
       },
       newContact: {
         icon: IC.user, color: C.purpleDark, bg: C.purpleBg, border: "#C7C2F4",
@@ -2605,7 +2605,7 @@ const SettingsPanel = ({ node, nodes=[], edges=[], onUpdateNode=()=>{}, onDelete
                         style={{ fontFamily:"'DM Mono'", fontSize:11 }}
                       />
                       <div style={{ fontSize:10, color:C.text5, fontWeight:500, lineHeight:1.4 }}>
-                        The resolved value must be a numeric user id (forgecrm_users.id). If it's missing, disabled, or not an admin/BDA Sales user, the step fails.
+                        The resolved value must be a numeric user id (ridemitr_wa_users.id). If it's missing, disabled, or not an admin/BDA Sales user, the step fails.
                       </div>
                     </>
                   ) : (

@@ -23,10 +23,14 @@
 
 const anthropic = require('./anthropic');
 const openai = require('./openai');
+const gemini = require('./gemini');
 
 const PROVIDERS = {
   anthropic,
   openai,
+  gemini,
+  openrouter: openai, // Uses OpenAI adapter with baseUrl
+  omniroute: openai,  // Uses OpenAI adapter with baseUrl
 };
 
 function getProvider(name) {

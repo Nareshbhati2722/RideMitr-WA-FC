@@ -1,13 +1,17 @@
-import { Globe, Instagram, Youtube, Facebook, Github, ExternalLink } from 'lucide-react';
+import { Globe, Instagram, Youtube, Facebook, Github, ExternalLink, Apple, Smartphone, MessageCircle, Linkedin } from 'lucide-react';
 import { C, FONT } from '../constants.js';
 
-// Forgemind links surfaced on the About Us page. Each opens in a new tab.
+// RideMitr links surfaced on the About Us page. Each opens in a new tab.
 const LINKS = [
-  { label: 'Website',   sub: 'forgemind.in',                 url: 'https://forgemind.in/',                      Icon: Globe,     color: '#2563EB', img: '/forgemind-logo.png' },
-  { label: 'Instagram', sub: '@forgemind_ai',                url: 'https://www.instagram.com/forgemind_ai/',    Icon: Instagram, color: '#E1306C' },
-  { label: 'YouTube',   sub: '@forgemind_ai',                url: 'https://www.youtube.com/@forgemind_ai',      Icon: Youtube,   color: '#FF0000' },
-  { label: 'Facebook',  sub: 'forgemindai',                  url: 'https://www.facebook.com/forgemindai',       Icon: Facebook,  color: '#1877F2' },
-  { label: 'GitHub',    sub: 'Forgemind-git',                url: 'https://github.com/Forgemind-git',           Icon: Github,    color: '#111111' },
+  { label: 'Website',   sub: 'RideMitr.com',                url: 'https://www.ridemitr.com',                      Icon: Globe,     color: '#2563EB', img: '/ridemitr-logo.png' },
+  { label: 'Instagram', sub: '@ridemitr_india',             url: 'https://www.instagram.com/ridemitr_india',      Icon: Instagram, color: '#E1306C' },
+  { label: 'YouTube',   sub: '@ridemitr_ai',                url: 'https://www.youtube.com/@ridemitr_ai',          Icon: Youtube,   color: '#FF0000' },
+  { label: 'Facebook',  sub: 'RideMitr',                    url: 'https://www.facebook.com/people/RideMitr/61570635166630/', Icon: Facebook,  color: '#1877F2' },
+  { label: 'LinkedIn',  sub: 'RideMitr',                    url: 'https://www.linkedin.com/company/ridemitr/posts/?viewAsMember=true', Icon: Linkedin, color: '#0A66C2' },
+  { label: 'GitHub',    sub: 'Nareshbhati2722',             url: 'https://github.com/Nareshbhati2722',            Icon: Github,    color: '#111111' },
+  { label: 'iOS App',   sub: 'App Store',                   url: 'https://apps.apple.com/in/app/ridemitr/id6775524884', Icon: Apple, color: '#000000' },
+  { label: 'Android App',sub: 'Google Play',                url: 'https://play.google.com/store/apps/details?id=com.md.ridemitr&pcampaignid=web_share', Icon: Smartphone, color: '#3DDC84' },
+  { label: 'WhatsApp',  sub: 'Community',                   url: 'https://chat.whatsapp.com/Dz1MeOgstcBFcZ7kf7i47o', Icon: MessageCircle, color: '#25D366' },
 ];
 
 export default function AboutUsPage() {
@@ -16,14 +20,14 @@ export default function AboutUsPage() {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <img
-          src="/forgemind-logo.gif"
-          alt="Forgemind"
+          src="/ridemitr-logo.gif"
+          alt="RideMitr"
           style={{ height: 64, width: 64, objectFit: 'contain', marginBottom: 14 }}
           onError={e => { e.currentTarget.style.display = 'none'; }}
         />
-        <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>About FORGEMIND <span style={{ color: C.primary }}>AI</span></h1>
+        <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>About RIDEMITR <span style={{ color: C.primary }}>AI</span></h1>
         <p style={{ fontSize: 14, color: C.textSecondary, margin: '10px auto 0', maxWidth: 540, lineHeight: 1.6 }}>
-          Forgemind builds practical AI automation tools — including this WhatsApp CRM.
+          RideMitr builds practical AI automation tools — including this WhatsApp CRM.
           Follow us and explore our work through the links below.
         </p>
       </div>
@@ -79,7 +83,7 @@ export default function AboutUsPage() {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 36, fontSize: 12, color: C.textMuted }}>
-        © {new Date().getFullYear()} Forgemind · Powered by FMOS
+        © {new Date().getFullYear()} RideMitr · Powered by FMOS
       </div>
     </div>
   );

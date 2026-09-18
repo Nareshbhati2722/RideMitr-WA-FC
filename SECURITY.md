@@ -1,9 +1,9 @@
 # Security Policy
 
-Forgemind Techhub LLP takes the security of ForgeChat seriously. ForgeChat
+RideMitr takes the security of RideMitr WA seriously. RideMitr WA
 handles WhatsApp Business conversations, contact data, and encrypted Meta access
 tokens, so we appreciate the work of security researchers and the wider
-community in keeping it safe. Thank you for helping protect ForgeChat and its
+community in keeping it safe. Thank you for helping protect RideMitr WA and its
 users.
 
 ## Reporting a Vulnerability
@@ -13,7 +13,7 @@ pull requests, or discussions.**
 
 Instead, report them privately by email to:
 
-> **security@forgemind.in** — subject line: `SECURITY: <short summary>`
+> **security@ridemitr.in** — subject line: `SECURITY: <short summary>`
 
 To help us triage quickly, please include as much of the following as you can:
 
@@ -43,7 +43,7 @@ named).
 
 ## Supported Versions
 
-ForgeChat is delivered as a continuously updated application. Security fixes are
+RideMitr WA is delivered as a continuously updated application. Security fixes are
 applied to the latest released version and the `main` branch only.
 
 | Version | Supported |
@@ -55,10 +55,10 @@ If you self-host, always run the latest version to receive security fixes.
 
 ## Scope
 
-**In scope** — vulnerabilities in the ForgeChat code maintained in this
+**In scope** — vulnerabilities in the RideMitr WA code maintained in this
 repository, for example:
 
-- Authentication / authorization flaws (JWT handling, the `forgecrm_token`
+- Authentication / authorization flaws (JWT handling, the `ridemitr_wa_token`
   cookie, BDA access scoping).
 - Injection (SQL, command, template) and cross-site scripting.
 - Insecure handling of Meta access tokens or the AES-256-GCM encryption layer.
@@ -77,7 +77,7 @@ repository, for example:
   (e.g. weak `JWT` secret, committed `.env`, missing TLS, exposed database
   port).
 - Denial-of-service, volumetric, or rate-limit-exhaustion attacks.
-- Social engineering, phishing, or physical attacks against Forgemind staff or
+- Social engineering, phishing, or physical attacks against RideMitr staff or
   infrastructure.
 - Reports from automated scanners without a demonstrated, exploitable impact.
 
@@ -97,11 +97,11 @@ action against you for such research, provided that you:
 
 ## Security Guidance for Self-Hosters
 
-If you deploy ForgeChat yourself, you are responsible for the security of your
+If you deploy RideMitr WA yourself, you are responsible for the security of your
 instance. Key practices (see the **Security** section of the
 [`README.md`](./README.md) for details):
 
-- Never commit `.env` files; keep `FORGECRM_ENCRYPTION_KEY`, the JWT signing
+- Never commit `.env` files; keep `RIDEMITR_WA_ENCRYPTION_KEY`, the JWT signing
   secret, and the Meta webhook verify token secret and unique.
 - Rotate the AES-256-GCM encryption key and Meta access tokens periodically.
 - Serve only over TLS and never expose the PostgreSQL or Redis ports publicly.
@@ -110,4 +110,18 @@ instance. Key practices (see the **Security** section of the
 ---
 
 *This policy is governed by the version in the default branch of this
-repository and may be updated at any time. © 2026 Forgemind Techhub LLP.*
+repository and may be updated at any time. © 2026 RideMitr.*
+
+---
+
+### Connect with RideMitr
+
+- 🌐 **Web**: [www.RideMitr.com](https://www.ridemitr.com) | [ridemitr.in](https://ridemitr.in/)
+- 🍎 **iOS App**: [Download on App Store](https://apps.apple.com/in/app/ridemitr/id6775524884)
+- 🤖 **Android App**: [Download on Google Play](https://play.google.com/store/apps/details?id=com.md.ridemitr&pcampaignid=web_share)
+- 👉 **WhatsApp Community**: [Join Here](https://chat.whatsapp.com/Dz1MeOgstcBFcZ7kf7i47o)
+- 📸 **Instagram**: [@ridemitr_india](https://www.instagram.com/ridemitr_india)
+- 💼 **LinkedIn**: [RideMitr](https://www.linkedin.com/company/ridemitr/posts/?viewAsMember=true)
+- 📘 **Facebook**: [ridemitrai](https://www.facebook.com/people/RideMitr/61570635166630/)
+- 🎥 **YouTube**: [@ridemitr_ai](https://www.youtube.com/@ridemitr_ai)
+- 💻 **GitHub**: [Nareshbhati2722](https://github.com/Nareshbhati2722)

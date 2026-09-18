@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -11,7 +13,7 @@ html, body, #root {
 }
 
 body {
-  font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: var(--c-pageBg);
@@ -40,13 +42,13 @@ input, button, textarea, select {
   --c-text: #111111;
   --c-textSecondary: #6B7280;
   --c-textMuted: #8696a0;
-  --c-primary: #dc2626;
-  --c-primaryHover: #b91c1c;
-  --c-primaryLight: #FCEBEB;
-  --c-primaryText: #111b21;
-  --c-purple: #534AB7;
-  --c-green: #0F6E56;
-  --c-amber: #E8A317;
+  --c-primary: #1E3A8A;
+  --c-primaryHover: #172A68;
+  --c-primaryLight: #E8EDF8;
+  --c-primaryText: #ffffff;
+  --c-purple: #1E3A8A;
+  --c-green: #138808;
+  --c-amber: #FF9933;
   --c-shadowSm: 0 1px 2px rgba(0,0,0,.08);
   --c-shadowMd: 0 8px 24px rgba(0,0,0,.06);
   --c-shadowLg: 0 20px 60px rgba(0,0,0,.15);

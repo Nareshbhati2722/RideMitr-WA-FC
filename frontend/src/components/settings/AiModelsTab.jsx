@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, Loader2, Eye, EyeOff, KeyRound, Bot, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Loader2, Eye, EyeOff, KeyRound, Bot, RefreshCw, Check, X, AlertCircle } from 'lucide-react';
 import { api } from '../../api.js';
 import { C, FONT, MONO } from '../../constants.js';
 import DeleteConfirmModal from '../DeleteConfirmModal.jsx';
@@ -16,6 +16,9 @@ import DeleteConfirmModal from '../DeleteConfirmModal.jsx';
 const PROVIDERS = [
   { value: 'anthropic', label: 'Anthropic Claude', hint: 'sk-ant-…' },
   { value: 'openai', label: 'OpenAI', hint: 'sk-…' },
+  { value: 'gemini', label: 'Google Gemini', hint: 'AIza…' },
+  { value: 'openrouter', label: 'OpenRouter', hint: 'sk-or-v1-…' },
+  { value: 'omniroute', label: 'OmniRoute', hint: 'sk-…' },
 ];
 
 const PROVIDER_LABELS = Object.fromEntries(PROVIDERS.map(p => [p.value, p.label]));
@@ -123,17 +126,32 @@ function AddModelForm({ onCancel, onCreated, onError }) {
   const [provider, setProvider] = useState('anthropic');
   const [label, setLabel] = useState('');
   const [apiKey, setApiKey] = useState('');
+  const [baseUrl, setBaseUrl] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const placeholder = PROVIDERS.find(p => p.value === provider)?.hint || 'sk-…';
+
+  const handleProviderChange = (newProvider) => {
+    setProvider(newProvider);
+    if (newProvider === 'openrouter') {
+      setBaseUrl('https://openrouter.ai/api/v1');
+    } else {
+      setBaseUrl('');
+    }
+  };
 
   const handleSave = async () => {
     if (!apiKey.trim()) { onError('Paste an API key first.'); return; }
     setSaving(true);
     onError('');
     try {
-      await api.aiModels.create({ provider, label: label.trim() || null, apiKey: apiKey.trim() });
+      await api.aiModels.create({ 
+        provider, 
+        label: label.trim() || null, 
+        apiKey: apiKey.trim(),
+        baseUrl: baseUrl.trim() || null
+      });
       onCreated();
     } catch (e) {
       onError(prettyError(e));
@@ -155,7 +173,7 @@ function AddModelForm({ onCancel, onCreated, onError }) {
             <button
               key={p.value}
               type="button"
-              onClick={() => setProvider(p.value)}
+              onClick={() => handleProviderChange(p.value)}
               style={{
                 flex: 1, padding: '10px 14px', borderRadius: 8,
                 border: provider === p.value ? `1.5px solid ${C.primary}` : `1px solid ${C.border}`,
@@ -179,6 +197,18 @@ function AddModelForm({ onCancel, onCreated, onError }) {
           style={inputStyle}
         />
       </div>
+
+      {(provider === 'openrouter' || provider === 'omniroute' || provider === 'openai') && (
+        <div style={{ marginBottom: 14 }}>
+          <FieldLabel>Base URL (optional)</FieldLabel>
+          <input
+            value={baseUrl}
+            onChange={e => setBaseUrl(e.target.value)}
+            placeholder="e.g. https://openrouter.ai/api/v1"
+            style={inputStyle}
+          />
+        </div>
+      )}
 
       <div style={{ marginBottom: 18 }}>
         <FieldLabel>API key *</FieldLabel>
@@ -220,6 +250,25 @@ function AddModelForm({ onCancel, onCreated, onError }) {
 }
 
 function ModelRow({ model, onDelete }) {
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState(null); // 'success' | 'error' | null
+
+  const handleValidate = async () => {
+    setIsValidating(true);
+    setValidationResult(null);
+    try {
+      await api.aiModels.validate(model.id);
+      setValidationResult('success');
+      setTimeout(() => setValidationResult(null), 3000);
+    } catch (e) {
+      setValidationResult('error');
+      alert(`Validation failed: ${e.message}`);
+      setTimeout(() => setValidationResult(null), 3000);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -240,18 +289,37 @@ function ModelRow({ model, onDelete }) {
           </div>
           <div style={{ fontSize: 11, color: C.textMuted, fontFamily: MONO, marginTop: 3 }}>
             {model.apiKeyMasked || '••••••••'}
+            {model.baseUrl && <span> · {model.baseUrl}</span>}
           </div>
         </div>
       </div>
-      <button onClick={onDelete} title="Remove"
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '7px 10px', borderRadius: 8,
-          border: '1px solid #FBC8C8', background: '#fff',
-          color: C.primary, fontSize: 12, fontFamily: FONT, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
-        }}>
-        <Trash2 size={13} /> Remove
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button onClick={handleValidate} disabled={isValidating} title="Test Key"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '7px 10px', borderRadius: 8,
+            border: `1px solid ${C.border}`, background: '#fff',
+            color: validationResult === 'success' ? '#10b981' : (validationResult === 'error' ? '#ef4444' : C.text),
+            fontSize: 12, fontFamily: FONT, fontWeight: 600, cursor: isValidating ? 'default' : 'pointer', flexShrink: 0,
+            opacity: isValidating ? 0.7 : 1,
+            transition: 'all 0.2s',
+          }}>
+          {isValidating ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : 
+           validationResult === 'success' ? <Check size={13} /> :
+           validationResult === 'error' ? <AlertCircle size={13} /> :
+           <Check size={13} />}
+          Validate
+        </button>
+        <button onClick={onDelete} title="Remove"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '7px 10px', borderRadius: 8,
+            border: '1px solid #FBC8C8', background: '#fff',
+            color: C.primary, fontSize: 12, fontFamily: FONT, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+          }}>
+          <Trash2 size={13} /> Remove
+        </button>
+      </div>
     </div>
   );
 }

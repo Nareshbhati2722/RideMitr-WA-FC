@@ -1,6 +1,6 @@
 # Versioning & Upgrade Policy
 
-ForgeChat follows [Semantic Versioning](https://semver.org/). This page is the
+RideMitr WA follows [Semantic Versioning](https://semver.org/). This page is the
 contract self-hosters rely on to upgrade safely.
 
 ## What each version bump means
@@ -42,9 +42,23 @@ GHCR via the [Publish Docker Images](./.github/workflows/docker-publish.yml)
 workflow:
 
 ```
-ghcr.io/forgemind-git/forge-chat-backend:<version>
-ghcr.io/forgemind-git/forge-chat-frontend:<version>
+ghcr.io/ridemitr-git/forge-chat-backend:<version>
+ghcr.io/ridemitr-git/forge-chat-frontend:<version>
 ```
 
 Pin to a specific version in production and review the CHANGELOG before
 upgrading across a major version.
+
+---
+
+### Connect with RideMitr
+
+- 🌐 **Web**: [www.RideMitr.com](https://www.ridemitr.com) | [ridemitr.in](https://ridemitr.in/)
+- 🍎 **iOS App**: [Download on App Store](https://apps.apple.com/in/app/ridemitr/id6775524884)
+- 🤖 **Android App**: [Download on Google Play](https://play.google.com/store/apps/details?id=com.md.ridemitr&pcampaignid=web_share)
+- 👉 **WhatsApp Community**: [Join Here](https://chat.whatsapp.com/Dz1MeOgstcBFcZ7kf7i47o)
+- 📸 **Instagram**: [@ridemitr_india](https://www.instagram.com/ridemitr_india)
+- 💼 **LinkedIn**: [RideMitr](https://www.linkedin.com/company/ridemitr/posts/?viewAsMember=true)
+- 📘 **Facebook**: [ridemitrai](https://www.facebook.com/people/RideMitr/61570635166630/)
+- 🎥 **YouTube**: [@ridemitr_ai](https://www.youtube.com/@ridemitr_ai)
+- 💻 **GitHub**: [Nareshbhati2722](https://github.com/Nareshbhati2722)

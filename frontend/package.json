@@ -1,8 +1,8 @@
 {
-  "name": "forgecrm-frontend",
+  "name": "ridemitr-wa-frontend",
   "version": "1.2.1",
   "author": "sthirumalairajan2212",
-  "description": "ForgeChat frontend — WhatsApp chat viewer",
+  "description": "RideMitr WA frontend — WhatsApp chat viewer",
   "private": true,
   "license": "LicenseRef-Sustainable-Use-License",
   "type": "module",

@@ -719,7 +719,7 @@ function withContactContext(systemPrompt, contactNumber) {
  */
 async function runAgent({ agentId, contactNumber, inboundMessageId, inboundText }) {
   const { rows: agentRows } = await pool.query(
-    `SELECT a.*, am.provider AS ai_provider, am.api_key_encrypted AS ai_api_key_encrypted
+    `SELECT a.*, am.provider AS ai_provider, am.api_key_encrypted AS ai_api_key_encrypted, am.base_url AS ai_base_url
        FROM coexistence.agents a
        LEFT JOIN coexistence.ai_models am ON am.id = a.ai_model_id
       WHERE a.id = $1`,
@@ -818,6 +818,7 @@ async function runAgent({ agentId, contactNumber, inboundMessageId, inboundText 
       onStep,
       model: agent.llm_model,
       apiKey,
+      baseUrl: agent.ai_base_url,
       maxIterations: Math.max(1, Math.min(20, agent.max_tool_iterations || 6)),
     });
 
@@ -901,7 +902,7 @@ async function runAgent({ agentId, contactNumber, inboundMessageId, inboundText 
  */
 async function runAgentTest({ agentId, messages }) {
   const { rows: agentRows } = await pool.query(
-    `SELECT a.*, am.provider AS ai_provider, am.api_key_encrypted AS ai_api_key_encrypted
+    `SELECT a.*, am.provider AS ai_provider, am.api_key_encrypted AS ai_api_key_encrypted, am.base_url AS ai_base_url
        FROM coexistence.agents a
        LEFT JOIN coexistence.ai_models am ON am.id = a.ai_model_id
       WHERE a.id = $1`,
@@ -956,6 +957,7 @@ async function runAgentTest({ agentId, messages }) {
     onStep,
     model: agent.llm_model,
     apiKey,
+    baseUrl: agent.ai_base_url,
     maxIterations: Math.max(1, Math.min(20, agent.max_tool_iterations || 6)),
   });
 
@@ -996,7 +998,7 @@ async function runAgentTest({ agentId, messages }) {
 // used by the in-app test chat's mic button.
 async function transcribeForAgent({ agentId, filePath }) {
   const { rows } = await pool.query(
-    `SELECT a.*, am.provider AS ai_provider, am.api_key_encrypted AS ai_api_key_encrypted
+    `SELECT a.*, am.provider AS ai_provider, am.api_key_encrypted AS ai_api_key_encrypted, am.base_url AS ai_base_url
        FROM coexistence.agents a
        LEFT JOIN coexistence.ai_models am ON am.id = a.ai_model_id
       WHERE a.id = $1`,
@@ -1016,7 +1018,7 @@ async function transcribeForAgent({ agentId, filePath }) {
 // close-summary sweeper (services/agentCloseSummary.js).
 async function runCloseSummary({ agentId, waNumber, contactNumber }) {
   const { rows } = await pool.query(
-    `SELECT a.*, am.provider AS ai_provider, am.api_key_encrypted AS ai_api_key_encrypted
+    `SELECT a.*, am.provider AS ai_provider, am.api_key_encrypted AS ai_api_key_encrypted, am.base_url AS ai_base_url
        FROM coexistence.agents a
        LEFT JOIN coexistence.ai_models am ON am.id = a.ai_model_id
       WHERE a.id = $1`,
@@ -1052,6 +1054,7 @@ async function runCloseSummary({ agentId, waNumber, contactNumber }) {
       onStep: async () => {},
       model: agent.llm_model,
       apiKey,
+      baseUrl: agent.ai_base_url,
       maxIterations: Math.max(1, Math.min(20, agent.max_tool_iterations || 6)),
       conversationKey: `${agent.id}:${contactNumber}:close`,
       contactNumber,

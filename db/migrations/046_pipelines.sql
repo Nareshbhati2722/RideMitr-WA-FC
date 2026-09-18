@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS coexistence.pipelines (
   name        TEXT    NOT NULL,
   is_default  BOOLEAN NOT NULL DEFAULT FALSE,
   position    INT     NOT NULL DEFAULT 0,
-  created_by  BIGINT  REFERENCES coexistence.forgecrm_users(id) ON DELETE SET NULL,
+  created_by  BIGINT  REFERENCES coexistence.ridemitr_wa_users(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS coexistence.deals (
   value               NUMERIC(14,2) NOT NULL DEFAULT 0,
   currency            TEXT   NOT NULL DEFAULT 'INR',
   status              TEXT   NOT NULL DEFAULT 'open' CHECK (status IN ('open','won','lost')),
-  assigned_user_id    BIGINT REFERENCES coexistence.forgecrm_users(id) ON DELETE SET NULL,
+  assigned_user_id    BIGINT REFERENCES coexistence.ridemitr_wa_users(id) ON DELETE SET NULL,
   contact_wa_number   TEXT,
   contact_number      TEXT,
   contact_name        TEXT,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS coexistence.deals (
   position            INT    NOT NULL DEFAULT 0,   -- ordering within a stage
   won_at              TIMESTAMPTZ,
   lost_at             TIMESTAMPTZ,
-  created_by          BIGINT REFERENCES coexistence.forgecrm_users(id) ON DELETE SET NULL,
+  created_by          BIGINT REFERENCES coexistence.ridemitr_wa_users(id) ON DELETE SET NULL,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

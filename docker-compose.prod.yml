@@ -13,12 +13,12 @@ services:
   # backend must allow it — otherwise POSTs (e.g. the first-run admin setup)
   # fail the CORS check and return 500. Deriving it from DOMAIN also lets the
   # CSP allow wss://<domain> for live updates.
-  forgecrm-backend:
+  ridemitr-wa-backend:
     environment:
       CORS_ORIGIN: https://${DOMAIN:?Set DOMAIN, e.g. DOMAIN=chat.example.com}
 
   # Stop publishing the plain-HTTP dev port; Caddy is the only public entrypoint.
-  forgecrm-frontend:
+  ridemitr-wa-frontend:
     ports: !reset []
 
   caddy:
@@ -34,7 +34,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - forgecrm-frontend
+      - ridemitr-wa-frontend
 
 volumes:
   caddy_data:

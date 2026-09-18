@@ -24,9 +24,10 @@ async function runWithTools({
   onStep,
   model,
   apiKey,
+  baseUrl,
   maxIterations,
 }) {
-  const client = new OpenAI({ apiKey });
+  const client = new OpenAI({ apiKey, baseURL: baseUrl });
   const oaiTools = toOpenAITools(tools);
 
   const history = [

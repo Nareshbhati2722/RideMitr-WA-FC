@@ -454,7 +454,7 @@ router.get('/agents/:id/export', adminOnly, async (req, res) => {
     );
     const full = agentShape(rows[0]);
     res.json({
-      type: 'forgechat.agent',
+      type: 'ridemitr-wa.agent',
       version: 1,
       agent: {
         name: full.name,
@@ -490,8 +490,8 @@ router.get('/agents/:id/export', adminOnly, async (req, res) => {
 router.post('/agents/import', adminOnly, async (req, res) => {
   try {
     const payload = req.body || {};
-    if (payload.type !== 'forgechat.agent' || !payload.agent) {
-      return res.status(400).json({ error: 'That file is not a ForgeChat agent export.' });
+    if (payload.type !== 'ridemitr-wa.agent' || !payload.agent) {
+      return res.status(400).json({ error: 'That file is not a RideMitr WA agent export.' });
     }
     const a = payload.agent;
     if (!a.name || !a.systemPrompt) {

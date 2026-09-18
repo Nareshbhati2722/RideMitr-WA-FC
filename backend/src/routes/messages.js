@@ -328,7 +328,7 @@ router.get('/contacts', async (req, res) => {
       FROM coexistence.chat_history ch
       ${joinKind} coexistence.contacts c
         ON c.wa_number = ch.wa_number AND c.contact_number = ch.contact_number
-      LEFT JOIN coexistence.forgecrm_users u ON u.id = c.assigned_user_id
+      LEFT JOIN coexistence.ridemitr_wa_users u ON u.id = c.assigned_user_id
       LEFT JOIN coexistence.conversation_reads cr
         ON cr.wa_number = ch.wa_number AND cr.contact_number = ch.contact_number
       WHERE ch.wa_number = $1 ${timeFilter} ${assignFilter}
@@ -612,7 +612,7 @@ router.get('/saved-contacts', async (req, res) => {
       SELECT c.contact_number, COALESCE(c.name, c.profile_name) AS name, c.tags, c.custom_fields, c.created_at, c.updated_at,
              c.assigned_user_id, u.display_name AS assigned_user_name, u.role AS assigned_user_role
       FROM coexistence.contacts c
-      LEFT JOIN coexistence.forgecrm_users u ON u.id = c.assigned_user_id
+      LEFT JOIN coexistence.ridemitr_wa_users u ON u.id = c.assigned_user_id
       WHERE c.wa_number = $1 AND COALESCE(c.name, c.profile_name) IS NOT NULL AND COALESCE(c.name, c.profile_name) <> '' ${assignFilter.replace(/assigned_user_id/g, 'c.assigned_user_id')}
       ORDER BY COALESCE(c.name, c.profile_name) ASC
     `, params);
@@ -639,7 +639,7 @@ router.get('/contact', async (req, res) => {
              u.display_name AS assigned_user_name,
              u.role AS assigned_user_role
       FROM coexistence.contacts c
-      LEFT JOIN coexistence.forgecrm_users u ON u.id = c.assigned_user_id
+      LEFT JOIN coexistence.ridemitr_wa_users u ON u.id = c.assigned_user_id
       WHERE c.wa_number = $1 AND c.contact_number = $2
       LIMIT 1
     `, [waNumber, contactNumber]);

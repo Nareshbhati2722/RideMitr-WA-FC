@@ -21,7 +21,7 @@ function requirePermission(page) {
     try {
       if (isAdmin(req.user)) return next();
       const { rows } = await pool.query(
-        `SELECT role, permissions FROM coexistence.forgecrm_users WHERE id = $1`,
+        `SELECT role, permissions FROM coexistence.ridemitr_wa_users WHERE id = $1`,
         [req.user.id]
       );
       const u = rows[0];

@@ -1,4 +1,4 @@
-# Standalone single-droplet deployment for ForgeChat — SAMPLE / TEMPLATE.
+# Standalone single-droplet deployment for RideMitr WA — SAMPLE / TEMPLATE.
 # Plain PostgreSQL + Redis + backend + frontend(nginx) + Caddy (auto-HTTPS).
 #
 # This is a committed template. To deploy:
@@ -11,10 +11,12 @@
 # same file for POSTGRES_PASSWORD so there's a single source of truth. The first
 # `docker compose up` fails with "env file ./backend/.env not found" until you
 # create backend/.env in step 2.
+name: ridemitr-wa
+
 services:
-  forgecrm-db:
+  ridemitr-wa-db:
     image: postgres:15
-    container_name: forgecrm-db
+    container_name: ridemitr-wa-db
     restart: unless-stopped
     env_file: ./backend/.env          # supplies POSTGRES_PASSWORD (other vars ignored by postgres)
     environment:
@@ -30,7 +32,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: forgecrm-redis
+    container_name: ridemitr-wa-redis
     restart: unless-stopped
     volumes:
       - redisdata:/data
@@ -40,33 +42,33 @@ services:
       timeout: 3s
       retries: 12
 
-  forgecrm-backend:
+  ridemitr-wa-backend:
     build: ./backend
-    container_name: forgecrm-backend
+    container_name: ridemitr-wa-backend
     restart: unless-stopped
     env_file: ./backend/.env
     environment:
       NODE_ENV: production
-      PORT: "3011"                     # nginx (frontend) proxies to forgecrm-backend:3011
+      PORT: "3011"                     # nginx (frontend) proxies to ridemitr-wa-backend:3011
     volumes:
       - media:/app/media               # downloaded inbound/outbound chat media
       - uploads:/app/uploads           # team-member profile pictures
     depends_on:
-      forgecrm-db:
+      ridemitr-wa-db:
         condition: service_healthy
       redis:
         condition: service_healthy
 
-  forgecrm-frontend:
+  ridemitr-wa-frontend:
     build: ./frontend
-    container_name: forgecrm-frontend
+    container_name: ridemitr-wa-frontend
     restart: unless-stopped
     depends_on:
-      - forgecrm-backend
+      - ridemitr-wa-backend
 
   caddy:
     image: caddy:2
-    container_name: forgecrm-caddy
+    container_name: ridemitr-wa-caddy
     restart: unless-stopped
     ports:
       - "80:80"
@@ -76,7 +78,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - forgecrm-frontend
+      - ridemitr-wa-frontend
 
 volumes:
   pgdata:

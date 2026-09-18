@@ -36,7 +36,7 @@ function _stringifyForInterpolation(v) {
   try { return JSON.stringify(v); } catch { return String(v); }
 }
 
-// Normalize a ForgeCRM field name into a {{variable}} token key.
+// Normalize a RideMitr WA field name into a {{variable}} token key.
 // MUST stay identical to fieldVarKey() in the frontend AutomationBuilderView.jsx
 // so the token the picker inserts is the token we resolve here.
 // "Date of Birth" -> "date_of_birth", "city" -> "city", "lead_score" -> "lead_score".
@@ -840,7 +840,7 @@ async function executeActionNode(client, executionId, node, context) {
         }
         // Verify the user exists, is active, and is a bda_sales / admin
         const { rows: uRows } = await client.query(
-          `SELECT id, display_name, role, is_active FROM coexistence.forgecrm_users WHERE id = $1`,
+          `SELECT id, display_name, role, is_active FROM coexistence.ridemitr_wa_users WHERE id = $1`,
           [userId]
         );
         if (uRows.length === 0) {

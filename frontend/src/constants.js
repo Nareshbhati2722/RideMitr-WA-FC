@@ -16,13 +16,13 @@ export const C = {
   text: 'var(--c-text, #111111)',
   textSecondary: 'var(--c-textSecondary, #6B7280)',
   textMuted: 'var(--c-textMuted, #8696a0)',
-  primary: 'var(--c-primary, #dc2626)',
-  primaryHover: 'var(--c-primaryHover, #b91c1c)',
-  primaryLight: 'var(--c-primaryLight, #FCEBEB)',
-  primaryText: 'var(--c-primaryText, #111b21)',
-  purple: 'var(--c-purple, #534AB7)',
-  green: 'var(--c-green, #0F6E56)',
-  amber: 'var(--c-amber, #E8A317)',
+  primary: 'var(--c-primary, #1E3A8A)',
+  primaryHover: 'var(--c-primaryHover, #172A68)',
+  primaryLight: 'var(--c-primaryLight, #E8EDF8)',
+  primaryText: 'var(--c-primaryText, #ffffff)',
+  purple: 'var(--c-purple, #1E3A8A)',
+  green: 'var(--c-green, #138808)',
+  amber: 'var(--c-amber, #FF9933)',
   shadowSm: 'var(--c-shadowSm, 0 1px 2px rgba(0,0,0,.08))',
   shadowMd: 'var(--c-shadowMd, 0 8px 24px rgba(0,0,0,.06))',
   shadowLg: 'var(--c-shadowLg, 0 20px 60px rgba(0,0,0,.15))',
@@ -47,7 +47,7 @@ export const CHAT = {
   statusSent: 'var(--c-statusSent, #8696a0)',
 };
 
-export const FONT = "'DM Sans', system-ui, sans-serif";
+export const FONT = "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif";
 export const MONO = "'DM Mono', monospace";
 
 export function relativeTime(ts) {

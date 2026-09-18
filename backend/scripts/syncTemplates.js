@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Refresh all WhatsApp accounts' templates from Meta. Run from cron every 4h:
-//   docker exec forgecrm-backend node scripts/syncTemplates.js
+//   docker exec ridemitr-wa-backend node scripts/syncTemplates.js
 require('dotenv').config();
 const pool = require('../src/db');
 const { syncAccountTemplates } = require('../src/routes/templates');

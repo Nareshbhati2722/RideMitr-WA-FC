@@ -1,7 +1,7 @@
 -- 055: Google OAuth *app* credentials (Client ID / Secret / Redirect URI).
 --
 -- This is the application-level OAuth client identity — what identifies this
--- ForgeChat install to Google — configured once by an admin in the UI under
+-- RideMitr WA install to Google — configured once by an admin in the UI under
 -- Settings -> Integrations -> Google. It is distinct from
 -- coexistence.oauth_credentials (migration 050), which holds the per-USER
 -- connection tokens minted after each user approves consent.
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS coexistence.google_oauth_credentials (
   client_id_encrypted      TEXT NOT NULL,
   client_secret_encrypted  TEXT NOT NULL,
   redirect_uri             TEXT NOT NULL,
-  updated_by               BIGINT REFERENCES coexistence.forgecrm_users(id) ON DELETE SET NULL,
+  updated_by               BIGINT REFERENCES coexistence.ridemitr_wa_users(id) ON DELETE SET NULL,
   created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

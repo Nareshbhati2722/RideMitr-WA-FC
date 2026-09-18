@@ -8,7 +8,7 @@ const nodeCrypto = require('node:crypto');
 // it at load time. NODE_ENV is not 'production' here, so the prod guard is inert.
 // Generated at runtime (never a literal) so secret scanners don't flag a
 // key-shaped string in source; any >=32-char value works for the round-trip.
-process.env.FORGECRM_ENCRYPTION_KEY = nodeCrypto.randomBytes(24).toString('hex');
+process.env.RIDEMITR_WA_ENCRYPTION_KEY = nodeCrypto.randomBytes(24).toString('hex');
 
 const { encrypt, decrypt, maskSecret } = require('../src/util/crypto');
 

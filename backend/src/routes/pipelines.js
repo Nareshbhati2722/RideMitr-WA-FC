@@ -325,7 +325,7 @@ router.get('/deals', async (req, res) => {
     const { rows } = await pool.query(
       `SELECT d.*, COALESCE(u.display_name, u.username) AS assigned_user_name
          FROM coexistence.deals d
-         LEFT JOIN coexistence.forgecrm_users u ON u.id = d.assigned_user_id
+         LEFT JOIN coexistence.ridemitr_wa_users u ON u.id = d.assigned_user_id
         WHERE d.pipeline_id = $1 ${scope}
         ORDER BY d.position ASC, d.created_at ASC`,
       params

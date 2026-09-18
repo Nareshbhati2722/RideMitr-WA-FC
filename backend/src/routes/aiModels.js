@@ -18,8 +18,33 @@ const { adminOnly } = require('../middleware/access');
 
 const router = Router();
 
-const SUPPORTED = new Set(['anthropic', 'openai']);
-const PROVIDER_LABELS = { anthropic: 'Anthropic Claude', openai: 'OpenAI' };
+const SUPPORTED = new Set(['anthropic', 'openai', 'gemini', 'openrouter', 'omniroute']);
+const PROVIDER_LABELS = { anthropic: 'Anthropic Claude', openai: 'OpenAI', gemini: 'Google Gemini', openrouter: 'OpenRouter', omniroute: 'OmniRoute' };
+
+const OpenAI = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenAI } = require('@google/genai');
+
+async function verifyApiKey(provider, apiKey, baseUrl) {
+  try {
+    if (provider === 'openai' || provider === 'openrouter' || provider === 'omniroute') {
+      const client = new OpenAI({ apiKey, baseURL: baseUrl });
+      await client.models.list();
+    } else if (provider === 'anthropic') {
+      const client = new Anthropic({ apiKey });
+      await client.models.list();
+    } else if (provider === 'gemini') {
+      const ai = new GoogleGenAI({ apiKey });
+      await ai.models.get({ model: 'gemini-2.5-flash' });
+    }
+  } catch (err) {
+    if (err.status === 401 || err.status === 403 || err.response?.status === 401 || err.response?.status === 403) {
+      throw new Error('Invalid API Key (Unauthorized)');
+    }
+    // Return raw message for other errors (e.g. invalid URL)
+    throw new Error(`API Validation Failed: ${err.message || 'Unknown error'}`);
+  }
+}
 
 // Listing models is needed by the agent editor, which non-admin operators with
 // agent access may open — so list/get(masked) only require authentication.
@@ -39,6 +64,7 @@ function shape(row, { reveal = false } = {}) {
     label: row.label || null,
     apiKeyMasked: maskSecret(apiKey || ''),
     apiKey: reveal ? (apiKey || '') : undefined,
+    baseUrl: row.base_url || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -83,13 +109,21 @@ router.post('/ai-models', adminOnly, async (req, res) => {
       return res.status(400).json({ error: 'provider and apiKey are required' });
     }
     if (!SUPPORTED.has(provider)) {
-      return res.status(400).json({ error: "provider must be 'anthropic' or 'openai'" });
+      return res.status(400).json({ error: "provider must be 'anthropic', 'openai', 'gemini', 'openrouter', or 'omniroute'" });
     }
+    const baseUrl = b.baseUrl && typeof b.baseUrl === 'string' ? b.baseUrl.trim() : null;
+
+    try {
+      await verifyApiKey(provider, apiKey, baseUrl);
+    } catch (e) {
+      return res.status(400).json({ error: e.message });
+    }
+
     const { rows } = await pool.query(
-      `INSERT INTO coexistence.ai_models (provider, label, api_key_encrypted, available_models)
-       VALUES ($1, $2, $3, '[]'::jsonb)
+      `INSERT INTO coexistence.ai_models (provider, label, api_key_encrypted, available_models, base_url)
+       VALUES ($1, $2, $3, '[]'::jsonb, $4)
        RETURNING *`,
-      [provider, b.label?.trim() || null, encrypt(apiKey)],
+      [provider, b.label?.trim() || null, encrypt(apiKey), baseUrl],
     );
     res.status(201).json(shape(rows[0]));
   } catch (err) {
@@ -112,11 +146,14 @@ router.put('/ai-models/:id', adminOnly, async (req, res) => {
     if (b.provider !== undefined) {
       const provider = String(b.provider).trim().toLowerCase();
       if (!SUPPORTED.has(provider)) {
-        return res.status(400).json({ error: "provider must be 'anthropic' or 'openai'" });
+        return res.status(400).json({ error: "provider must be 'anthropic', 'openai', 'gemini', 'openrouter', or 'omniroute'" });
       }
       push('provider', provider);
     }
     if (b.label !== undefined) push('label', b.label?.trim() || null);
+    if (b.baseUrl !== undefined) {
+      push('base_url', b.baseUrl && typeof b.baseUrl === 'string' ? b.baseUrl.trim() : null);
+    }
     if (b.apiKey !== undefined) {
       const key = String(b.apiKey).trim();
       if (!key) return res.status(400).json({ error: 'apiKey cannot be empty — omit it to keep the current key' });
@@ -124,6 +161,21 @@ router.put('/ai-models/:id', adminOnly, async (req, res) => {
     }
 
     if (sets.length === 1) return res.status(400).json({ error: 'No updatable fields provided' });
+
+    // Validate the new combination of (provider, apiKey, baseUrl)
+    try {
+      const { rows: currentRows } = await pool.query('SELECT provider, base_url, api_key_encrypted FROM coexistence.ai_models WHERE id = $1', [req.params.id]);
+      if (currentRows.length > 0) {
+        const current = currentRows[0];
+        const checkProvider = b.provider !== undefined ? String(b.provider).trim().toLowerCase() : current.provider;
+        const checkBaseUrl = b.baseUrl !== undefined ? (b.baseUrl && typeof b.baseUrl === 'string' ? b.baseUrl.trim() : null) : current.base_url;
+        const checkKey = b.apiKey !== undefined ? String(b.apiKey).trim() : decrypt(current.api_key_encrypted);
+        
+        await verifyApiKey(checkProvider, checkKey, checkBaseUrl);
+      }
+    } catch (e) {
+      return res.status(400).json({ error: e.message });
+    }
 
     params.push(req.params.id);
     const { rows } = await pool.query(
@@ -162,6 +214,22 @@ router.delete('/ai-models/:id', adminOnly, async (req, res) => {
   } catch (err) {
     console.error('[ai-models] delete error:', err.message);
     res.status(500).json({ error: 'Failed to delete AI model' });
+  }
+});
+
+// Validate — admin only
+router.post('/ai-models/:id/validate', adminOnly, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT provider, base_url, api_key_encrypted FROM coexistence.ai_models WHERE id = $1', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    
+    const { provider, base_url, api_key_encrypted } = rows[0];
+    const apiKey = decrypt(api_key_encrypted);
+    
+    await verifyApiKey(provider, apiKey, base_url);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

@@ -58,7 +58,7 @@ export default function SetupWizard({ onComplete }) {
           background: 'radial-gradient(circle, rgba(83,74,183,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 480 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 40 }}>
-            <img src="/forgemind-logo.gif" alt="" style={{ width: 40, height: 40, borderRadius: 9 }} />
+            <img src="/ridemitr-logo.gif" alt="" style={{ width: 40, height: 40, borderRadius: 9 }} />
           </div>
           <h1 style={{ fontSize: 42, fontWeight: 800, color: C.headerText, letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 20 }}>
             Let's get you set up

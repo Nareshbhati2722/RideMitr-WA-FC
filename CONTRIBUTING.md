@@ -1,6 +1,6 @@
-# Contributing to ForgeChat
+# Contributing to RideMitr WA
 
-Thanks for your interest in improving ForgeChat — a full-stack WhatsApp CRM
+Thanks for your interest in improving RideMitr WA — a full-stack WhatsApp CRM
 built on the Meta WhatsApp Cloud API. This guide explains how to set up a local
 environment, the conventions we follow, and how to get a change merged.
 
@@ -28,7 +28,7 @@ By participating in this project, you agree to abide by our
 
 ## Ways to Contribute
 
-- **Report a bug** — open a [GitHub issue](https://github.com/Forgemind-git/ForgeChat/issues)
+- **Report a bug** — open a [GitHub issue](https://github.com/Nareshbhati2722/RideMitr-WA-FC/issues)
   with steps to reproduce, expected vs. actual behaviour, your environment
   (OS, Node version, browser), and logs or screenshots where relevant.
 - **Propose a feature** — open an issue describing the problem you want solved
@@ -47,7 +47,7 @@ By participating in this project, you agree to abide by our
 ## Repository Structure
 
 ```
-ForgeChat/
+RideMitr WA/
 ├── backend/              # Node.js 20 + Express 4 API (pg, BullMQ)
 │   ├── src/
 │   │   ├── index.js            # bootstrap, middleware, route mounting
@@ -91,22 +91,22 @@ External contributors should **fork** the repository, then clone their fork and
 add this repo as the `upstream` remote so you can keep your branch in sync:
 
 ```bash
-git clone https://github.com/<your-username>/ForgeChat.git
-cd ForgeChat
-git remote add upstream https://github.com/Forgemind-git/ForgeChat.git
+git clone https://github.com/<your-username>/RideMitr WA.git
+cd RideMitr WA
+git remote add upstream https://github.com/Nareshbhati2722/RideMitr-WA-FC.git
 ```
 
 ### 2. Start PostgreSQL and Redis
 
-ForgeChat needs PostgreSQL 15 and Redis. The quickest way to get both with
+RideMitr WA needs PostgreSQL 15 and Redis. The quickest way to get both with
 published ports for a natively-run backend:
 
 ```bash
-docker run -d --name forgechat-dev-db \
+docker run -d --name ridemitr-wa-dev-db \
   -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=postgres \
   -p 5432:5432 postgres:15
 
-docker run -d --name forgechat-dev-redis -p 6379:6379 redis:7-alpine
+docker run -d --name ridemitr-wa-dev-redis -p 6379:6379 redis:7-alpine
 ```
 
 > The repository's `docker-compose.sample.yml` is the **production** stack and
@@ -127,7 +127,7 @@ Edit `.env`. At minimum the backend requires:
 |----------|---------|
 | `DATABASE_URL` | e.g. `postgres://postgres:postgres@localhost:5432/postgres` |
 | `JWT_SECRET` | any long random string for signing auth tokens |
-| `FORGECRM_ENCRYPTION_KEY` | random passphrase for AES-256-GCM token encryption (SHA-256'd to a 32-byte key) |
+| `RIDEMITR_WA_ENCRYPTION_KEY` | random passphrase for AES-256-GCM token encryption (SHA-256'd to a 32-byte key) |
 | `REDIS_URL` | e.g. `redis://localhost:6379` (required for BullMQ queues) |
 | `PORT` | `3001` for local dev |
 | `CORS_ORIGIN` | `http://localhost:5173` (the Vite dev server) |
@@ -259,7 +259,7 @@ PRs whose commits are not signed off cannot be merged.
 
 ## License of Contributions
 
-ForgeChat is distributed under the [Sustainable Use License](./LICENSE.md). By
+RideMitr WA is distributed under the [Sustainable Use License](./LICENSE.md). By
 submitting a contribution, you agree that it is licensed under the same
 Sustainable Use License (**inbound = outbound**). No separate copyright
 assignment or CLA is required.
@@ -276,7 +276,7 @@ assignment or CLA is required.
    or `docs/<topic>`.
 3. **Commit** in small, logical, signed-off steps using Conventional Commits.
 4. **Push** to your fork and **open a pull request** against
-   `Forgemind-git/ForgeChat:main`. Fill in the description: what changed, why,
+   `Nareshbhati2722/RideMitr-WA-FC:main`. Fill in the description: what changed, why,
    how you tested it, and any related issue (`Closes #123`).
 5. **Respond to review.** Please address requested changes or reply within
    **14 days** — stale PRs may be closed, but you're welcome to reopen them once
@@ -304,9 +304,23 @@ Before requesting review, confirm:
 
 ## Getting Help
 
-- Open a [GitHub issue](https://github.com/Forgemind-git/ForgeChat/issues) for
+- Open a [GitHub issue](https://github.com/Nareshbhati2722/RideMitr-WA-FC/issues) for
   questions, bugs, or feature discussion.
 - New to the project? Look for issues labelled **good first issue**, and feel
   free to add yourself to [`AUTHORS.md`](./AUTHORS.md) in your first PR.
 
 Thank you for contributing! 🙌
+
+---
+
+### Connect with RideMitr
+
+- 🌐 **Web**: [www.RideMitr.com](https://www.ridemitr.com) | [ridemitr.in](https://ridemitr.in/)
+- 🍎 **iOS App**: [Download on App Store](https://apps.apple.com/in/app/ridemitr/id6775524884)
+- 🤖 **Android App**: [Download on Google Play](https://play.google.com/store/apps/details?id=com.md.ridemitr&pcampaignid=web_share)
+- 👉 **WhatsApp Community**: [Join Here](https://chat.whatsapp.com/Dz1MeOgstcBFcZ7kf7i47o)
+- 📸 **Instagram**: [@ridemitr_india](https://www.instagram.com/ridemitr_india)
+- 💼 **LinkedIn**: [RideMitr](https://www.linkedin.com/company/ridemitr/posts/?viewAsMember=true)
+- 📘 **Facebook**: [ridemitrai](https://www.facebook.com/people/RideMitr/61570635166630/)
+- 🎥 **YouTube**: [@ridemitr_ai](https://www.youtube.com/@ridemitr_ai)
+- 💻 **GitHub**: [Nareshbhati2722](https://github.com/Nareshbhati2722)

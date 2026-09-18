@@ -188,6 +188,7 @@ export const api = {
     create: (data) => req('/ai-models', { method: 'POST', body: JSON.stringify(data) }),
     update: (id, data) => req(`/ai-models/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => req(`/ai-models/${id}`, { method: 'DELETE' }),
+    validate: (id) => req(`/ai-models/${id}/validate`, { method: 'POST' }),
   },
   // AI Agents — standalone LLM-driven chat handlers bound to a WhatsApp account.
   agents: {

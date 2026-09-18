@@ -1,10 +1,10 @@
-# ForgeChat — Deployment Guide
+# RideMitr WA — Deployment Guide
 
-ForgeChat ships with a ready-to-run `docker-compose.yml`. For the normal install,
+RideMitr WA ships with a ready-to-run `docker-compose.yml`. For the normal install,
 follow the **Deploy** section of [`README.md`](./README.md):
 
 ```bash
-git clone https://github.com/Forgemind-git/ForgeChat.git && cd ForgeChat
+git clone https://github.com/Nareshbhati2722/RideMitr-WA-FC.git && cd RideMitr WA
 
 # Server with a domain + automatic HTTPS (required for WhatsApp) — recommended:
 ./install.sh                               # asks for your domain, checks DNS/ports, deploys
@@ -28,10 +28,10 @@ may still want.
 
 | Service | Image | Purpose |
 |---|---|---|
-| `forgecrm-db` | `postgres:15` | All data in the `coexistence` schema (no host port) |
+| `ridemitr-wa-db` | `postgres:15` | All data in the `coexistence` schema (no host port) |
 | `redis` | `redis:7-alpine` | BullMQ send + media-download queues |
-| `forgecrm-backend` | built from `backend/Dockerfile` (context = repo root) | Express API + workers + boot migration runner |
-| `forgecrm-frontend` | built from `frontend/Dockerfile` (`nginx` after `vite build`) | React SPA; proxies `/api`, `/uploads`, `/l/` to the backend |
+| `ridemitr-wa-backend` | built from `backend/Dockerfile` (context = repo root) | Express API + workers + boot migration runner |
+| `ridemitr-wa-frontend` | built from `frontend/Dockerfile` (`nginx` after `vite build`) | React SPA; proxies `/api`, `/uploads`, `/l/` to the backend |
 | `caddy` *(prod overlay only)* | `caddy:2` | Automatic Let's Encrypt TLS, driven by `$DOMAIN` |
 
 The backend image is built with the **repo root** as the build context (so
@@ -42,10 +42,10 @@ The backend image is built with the **repo root** as the build context (so
 
 | Volume | Mount | Purpose | Backup priority |
 |---|---|---|---|
-| `pgdata` | `forgecrm-db:/var/lib/postgresql/data` | **All CRM data** incl. AES-encrypted Meta tokens | **Critical** — back up daily |
-| `secrets` | `forgecrm-backend:/app/data` | **Auto-generated JWT + encryption key** (`instance.json`) | **Critical** — losing it makes encrypted WhatsApp tokens unreadable |
-| `media` | `forgecrm-backend:/app/media` | Downloaded WhatsApp media | Medium |
-| `uploads` | `forgecrm-backend:/app/uploads` | Uploaded files / profile pictures | Low |
+| `pgdata` | `ridemitr-wa-db:/var/lib/postgresql/data` | **All CRM data** incl. AES-encrypted Meta tokens | **Critical** — back up daily |
+| `secrets` | `ridemitr-wa-backend:/app/data` | **Auto-generated JWT + encryption key** (`instance.json`) | **Critical** — losing it makes encrypted WhatsApp tokens unreadable |
+| `media` | `ridemitr-wa-backend:/app/media` | Downloaded WhatsApp media | Medium |
+| `uploads` | `ridemitr-wa-backend:/app/uploads` | Uploaded files / profile pictures | Low |
 | `redisdata` | `redis:/data` | Queue state | Medium |
 | `caddy_data` / `caddy_config` *(prod)* | `caddy:/data`, `/config` | TLS certs | Low (regenerable) |
 
@@ -57,7 +57,7 @@ wired by the compose file. To override anything, create a root `.env` next to
 
 - `POSTGRES_PASSWORD` — bundled DB password (changing it later needs `docker compose down -v`)
 - `HTTP_PORT` — host port for the UI (default `8080`)
-- `JWT_SECRET` / `FORGECRM_ENCRYPTION_KEY` — pin specific values instead of the auto-generated ones (don't change the encryption key after data is encrypted)
+- `JWT_SECRET` / `RIDEMITR_WA_ENCRYPTION_KEY` — pin specific values instead of the auto-generated ones (don't change the encryption key after data is encrypted)
 - `ADMIN_EMAIL` + `ADMIN_PASSWORD` — headless admin seed (skips the setup wizard)
 - `META_APP_SECRET`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_*` — optional feature keys
 - WhatsApp accounts themselves are connected in the UI (Settings → WhatsApp), not via env.
@@ -73,9 +73,9 @@ first-run wizard handles it.
 ## 5. Host cron jobs (optional maintenance)
 
 ```cron
-0  3  * * *  cd /path/to/ForgeChat && docker compose exec -T forgecrm-backend node scripts/cleanupMedia.js
-0  */4 * * * cd /path/to/ForgeChat && docker compose exec -T forgecrm-backend node scripts/syncTemplates.js
-0  2  * * *  cd /path/to/ForgeChat && docker compose exec -T forgecrm-backend node scripts/syncTemplateAnalytics.js
+0  3  * * *  cd /path/to/RideMitr WA && docker compose exec -T ridemitr-wa-backend node scripts/cleanupMedia.js
+0  */4 * * * cd /path/to/RideMitr WA && docker compose exec -T ridemitr-wa-backend node scripts/syncTemplates.js
+0  2  * * *  cd /path/to/RideMitr WA && docker compose exec -T ridemitr-wa-backend node scripts/syncTemplateAnalytics.js
 ```
 
 Without these you still get inbound webhooks + sends, but media disk grows, template
@@ -83,12 +83,12 @@ status drifts from Meta, and analytics doesn't refresh.
 
 ## 6. Backups
 
-Daily `pg_dump` of `forgecrm-db` is non-negotiable (it holds encrypted Meta tokens,
+Daily `pg_dump` of `ridemitr-wa-db` is non-negotiable (it holds encrypted Meta tokens,
 chats, contacts, templates, automations). Also keep the `secrets` volume — it holds
 the key that decrypts those tokens.
 
 ```bash
-0 4 * * * cd /path/to/ForgeChat && docker compose exec -T forgecrm-db pg_dump -U postgres postgres | gzip > /srv/backups/forgechat-$(date +\%Y\%m\%d).sql.gz
+0 4 * * * cd /path/to/RideMitr WA && docker compose exec -T ridemitr-wa-db pg_dump -U postgres postgres | gzip > /srv/backups/ridemitr-wa-$(date +\%Y\%m\%d).sql.gz
 # + sync /srv/backups off-host
 ```
 
@@ -96,7 +96,7 @@ the key that decrypts those tokens.
 
 ```bash
 docker compose ps                                  # all services Up/healthy
-docker compose logs forgecrm-backend | tail        # "[migrate] applied …", "Backend running on port 3011"
+docker compose logs ridemitr-wa-backend | tail        # "[migrate] applied …", "Backend running on port 3011"
 curl -fsS http://localhost:8080/api/auth/status    # → {"setupRequired":true} before setup
 ```
 
@@ -114,3 +114,17 @@ and send a real message to the business number — it should appear in **Chats**
 ---
 
 For day-to-day use see [`README.md`](./README.md). For low-level design see [`LLD.md`](./LLD.md).
+
+---
+
+### Connect with RideMitr
+
+- 🌐 **Web**: [www.RideMitr.com](https://www.ridemitr.com) | [ridemitr.in](https://ridemitr.in/)
+- 🍎 **iOS App**: [Download on App Store](https://apps.apple.com/in/app/ridemitr/id6775524884)
+- 🤖 **Android App**: [Download on Google Play](https://play.google.com/store/apps/details?id=com.md.ridemitr&pcampaignid=web_share)
+- 👉 **WhatsApp Community**: [Join Here](https://chat.whatsapp.com/Dz1MeOgstcBFcZ7kf7i47o)
+- 📸 **Instagram**: [@ridemitr_india](https://www.instagram.com/ridemitr_india)
+- 💼 **LinkedIn**: [RideMitr](https://www.linkedin.com/company/ridemitr/posts/?viewAsMember=true)
+- 📘 **Facebook**: [ridemitrai](https://www.facebook.com/people/RideMitr/61570635166630/)
+- 🎥 **YouTube**: [@ridemitr_ai](https://www.youtube.com/@ridemitr_ai)
+- 💻 **GitHub**: [Nareshbhati2722](https://github.com/Nareshbhati2722)

@@ -10,7 +10,7 @@ const { effectivePages } = require('./permissions');
 async function loadUserSession(userId) {
   const { rows } = await pool.query(
     `SELECT id, username, email, display_name, role, permissions, is_active, last_login_at
-       FROM coexistence.forgecrm_users WHERE id = $1`,
+       FROM coexistence.ridemitr_wa_users WHERE id = $1`,
     [userId]
   );
   const u = rows[0];
@@ -35,8 +35,8 @@ async function loadUserSession(userId) {
 // JWT_SECRET is guaranteed present + strong by util/instanceSecrets, which runs
 // first in index.js (resolves from env, else a persisted file, else generates
 // one). The fallback below only matters for non-standard entry points.
-const JWT_SECRET = process.env.JWT_SECRET || 'forgecrm-dev-secret-change-me';
-const COOKIE_NAME = 'forgecrm_token';
+const JWT_SECRET = process.env.JWT_SECRET || 'ridemitr-wa-dev-secret-change-me';
+const COOKIE_NAME = 'ridemitr_wa_token';
 const TOKEN_EXPIRY = '24h';
 
 const router = Router();
@@ -46,7 +46,7 @@ async function ensureTables() {
   const client = await pool.connect();
   try {
     await client.query(`
-      CREATE TABLE IF NOT EXISTS coexistence.forgecrm_users (
+      CREATE TABLE IF NOT EXISTS coexistence.ridemitr_wa_users (
         id         BIGSERIAL PRIMARY KEY,
         username   TEXT NOT NULL UNIQUE,
         email      TEXT NOT NULL UNIQUE,
@@ -63,13 +63,13 @@ async function ensureTables() {
     // table empty so the first-run UI setup wizard (GET /auth/status ->
     // setupRequired, POST /auth/setup) creates the admin in the browser. No
     // password is ever generated or written to disk.
-    const { rows } = await client.query('SELECT COUNT(*) FROM coexistence.forgecrm_users');
+    const { rows } = await client.query('SELECT COUNT(*) FROM coexistence.ridemitr_wa_users');
     if (parseInt(rows[0].count, 10) === 0) {
       if (process.env.ADMIN_PASSWORD) {
-        const adminEmail = (process.env.ADMIN_EMAIL || 'admin@forgemind.space').trim().toLowerCase();
+        const adminEmail = (process.env.ADMIN_EMAIL || 'admin@ridemitr.space').trim().toLowerCase();
         const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
         await client.query(
-          `INSERT INTO coexistence.forgecrm_users (username, email, password, display_name, role)
+          `INSERT INTO coexistence.ridemitr_wa_users (username, email, password, display_name, role)
            VALUES ('admin', $1, $2, 'Admin', 'admin')`,
           [adminEmail, hash]
         );
@@ -114,7 +114,7 @@ async function authMiddleware(req, res, next) {
     // until the 24h token expires. The fresh role also overrides any stale role
     // embedded in the JWT (an admin who demotes a user takes effect at once).
     const { rows } = await pool.query(
-      'SELECT role, is_active FROM coexistence.forgecrm_users WHERE id = $1',
+      'SELECT role, is_active FROM coexistence.ridemitr_wa_users WHERE id = $1',
       [payload.id]
     );
     const u = rows[0];
@@ -142,7 +142,7 @@ router.post('/auth/login', async (req, res) => {
   }
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM coexistence.forgecrm_users WHERE email = $1',
+      'SELECT * FROM coexistence.ridemitr_wa_users WHERE email = $1',
       [email.trim().toLowerCase()]
     );
     const user = rows[0];
@@ -160,7 +160,7 @@ router.post('/auth/login', async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
     // Best-effort: stamp last_login_at; don't fail login if this errors.
-    pool.query(`UPDATE coexistence.forgecrm_users SET last_login_at = NOW() WHERE id = $1`, [user.id]).catch(() => {});
+    pool.query(`UPDATE coexistence.ridemitr_wa_users SET last_login_at = NOW() WHERE id = $1`, [user.id]).catch(() => {});
     const session = await loadUserSession(user.id);
     res.json({ user: session });
   } catch (err) {
@@ -198,7 +198,7 @@ router.post('/auth/logout', (req, res) => {
 // first-run setup wizard (no users yet) instead of the login screen.
 router.get('/auth/status', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM coexistence.forgecrm_users');
+    const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM coexistence.ridemitr_wa_users');
     res.json({ setupRequired: rows[0].n === 0 });
   } catch (err) {
     // DB not ready / not migrated yet — let the UI retry.
@@ -218,14 +218,14 @@ router.post('/auth/setup', async (req, res) => {
   try {
     await client.query('BEGIN');
     await client.query('SELECT pg_advisory_xact_lock(947218531)');
-    const { rows: cnt } = await client.query('SELECT COUNT(*)::int AS n FROM coexistence.forgecrm_users');
+    const { rows: cnt } = await client.query('SELECT COUNT(*)::int AS n FROM coexistence.ridemitr_wa_users');
     if (cnt[0].n > 0) {
       await client.query('ROLLBACK');
       return res.status(409).json({ error: 'Setup already completed' });
     }
     const hash = await bcrypt.hash(password, 10);
     const { rows: ins } = await client.query(
-      `INSERT INTO coexistence.forgecrm_users (username, email, password, display_name, role)
+      `INSERT INTO coexistence.ridemitr_wa_users (username, email, password, display_name, role)
        VALUES ('admin', $1, $2, $3, 'admin')
        RETURNING id, username, display_name, role`,
       [email.trim().toLowerCase(), hash, (displayName || 'Admin').trim()]

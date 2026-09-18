@@ -67,8 +67,8 @@ export default function LoginGate({ onLogin }) {
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 480 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 40 }}>
             <img
-              src="/forgemind-logo.gif"
-              alt="ForgeMind Logo"
+              src="/ridemitr-logo.gif"
+              alt="RideMitr Logo"
               style={{ height: 56, width: 56, objectFit: 'contain', flexShrink: 0 }}
               onError={e => { e.currentTarget.style.display = 'none'; }}
             />
@@ -79,7 +79,7 @@ export default function LoginGate({ onLogin }) {
                 letterSpacing: '-0.02em',
                 color: C.headerText,
               }}>
-                Forge<span style={{ color: C.primary }}>Chat</span>
+                Ride<span style={{ color: C.primary }}>Mitr</span>
               </div>
               <div style={{
                 fontSize: 11,
@@ -116,7 +116,7 @@ export default function LoginGate({ onLogin }) {
         </div>
 
         <a
-          href="https://forgemind.in/"
+          href="https://ridemitr.in/"
           target="_blank"
           rel="noopener noreferrer"
           style={{
@@ -132,7 +132,7 @@ export default function LoginGate({ onLogin }) {
             cursor: 'pointer',
           }}
         >
-          FORGEMIND <span style={{ color: C.primary }}>AI</span>
+          RIDEMITR <span style={{ color: C.primary }}>AI</span>
         </a>
       </div>
 
@@ -189,7 +189,7 @@ export default function LoginGate({ onLogin }) {
               </div>
               <input
                 type="email"
-                placeholder="admin@forgemind.space"
+                placeholder="admin@ridemitr.space"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 autoFocus

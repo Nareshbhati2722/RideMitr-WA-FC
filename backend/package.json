@@ -1,8 +1,8 @@
 {
-  "name": "forgecrm-backend",
+  "name": "ridemitr-wa-backend",
   "version": "1.2.1",
   "author": "sthirumalairajan2212",
-  "description": "ForgeChat backend API for WhatsApp chat viewer",
+  "description": "RideMitr WA backend API for WhatsApp chat viewer",
   "private": true,
   "license": "LicenseRef-Sustainable-Use-License",
   "main": "src/index.js",
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.99.0",
+    "@google/genai": "^2.23.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.77.6",

@@ -1,10 +1,10 @@
 # License
 
-Copyright (c) 2026 Forgemind Techhub LLP
+Copyright (c) 2026 RideMitr
 
 Portions of this software are licensed as follows:
 
-* All third party components incorporated into the ForgeChat software are
+* All third party components incorporated into the RideMitr WA software are
   licensed under the original license provided by the owner of the applicable
   component.
 * Content outside of the above mentioned restriction is available under the
@@ -81,7 +81,7 @@ claim.
 
 The "licensor" is the entity offering these terms, and the "software" is the
 software the licensor makes available under these terms, including any portion
-of it. In this license, the licensor is **Forgemind Techhub LLP**.
+of it. In this license, the licensor is **RideMitr**.
 
 "you" refers to the individual or entity agreeing to these terms.
 
@@ -98,4 +98,18 @@ terms.
 "use" means anything you do with the software requiring one of your licenses.
 
 "trademark" means trademarks, service marks, and similar rights. See
-[`TRADEMARK.md`](./TRADEMARK.md) for the Forgemind brand usage policy.
+[`TRADEMARK.md`](./TRADEMARK.md) for the RideMitr brand usage policy.
+
+---
+
+### Connect with RideMitr
+
+- 🌐 **Web**: [www.RideMitr.com](https://www.ridemitr.com) | [ridemitr.in](https://ridemitr.in/)
+- 🍎 **iOS App**: [Download on App Store](https://apps.apple.com/in/app/ridemitr/id6775524884)
+- 🤖 **Android App**: [Download on Google Play](https://play.google.com/store/apps/details?id=com.md.ridemitr&pcampaignid=web_share)
+- 👉 **WhatsApp Community**: [Join Here](https://chat.whatsapp.com/Dz1MeOgstcBFcZ7kf7i47o)
+- 📸 **Instagram**: [@ridemitr_india](https://www.instagram.com/ridemitr_india)
+- 💼 **LinkedIn**: [RideMitr](https://www.linkedin.com/company/ridemitr/posts/?viewAsMember=true)
+- 📘 **Facebook**: [ridemitrai](https://www.facebook.com/people/RideMitr/61570635166630/)
+- 🎥 **YouTube**: [@ridemitr_ai](https://www.youtube.com/@ridemitr_ai)
+- 💻 **GitHub**: [Nareshbhati2722](https://github.com/Nareshbhati2722)

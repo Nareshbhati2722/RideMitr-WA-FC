@@ -84,7 +84,7 @@ function validatePermissions(perms) {
 router.get('/users', adminOnly, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT * FROM coexistence.forgecrm_users ORDER BY created_at`
+      `SELECT * FROM coexistence.ridemitr_wa_users ORDER BY created_at`
     );
     const assignmentsMap = await loadAssignments(rows.map(r => r.id));
     res.json(rows.map(r => shapeUser(r, assignmentsMap.get(r.id) || [])));
@@ -97,7 +97,7 @@ router.get('/users', adminOnly, async (req, res) => {
 router.get('/users/:id', adminOnly, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT * FROM coexistence.forgecrm_users WHERE id = $1`,
+      `SELECT * FROM coexistence.ridemitr_wa_users WHERE id = $1`,
       [req.params.id]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Not found' });
@@ -125,7 +125,7 @@ router.post('/users', adminOnly, async (req, res) => {
     try {
       await client.query('BEGIN');
       const { rows } = await client.query(
-        `INSERT INTO coexistence.forgecrm_users
+        `INSERT INTO coexistence.ridemitr_wa_users
            (username, email, password, display_name, role, permissions, created_by)
          VALUES ($1, LOWER($2), $3, $4, $5, $6::jsonb, $7)
          RETURNING *`,
@@ -185,7 +185,7 @@ router.post('/users', adminOnly, async (req, res) => {
 router.patch('/users/:id', adminOnly, async (req, res) => {
   const id = req.params.id;
   try {
-    const { rows: existing } = await pool.query(`SELECT * FROM coexistence.forgecrm_users WHERE id = $1`, [id]);
+    const { rows: existing } = await pool.query(`SELECT * FROM coexistence.ridemitr_wa_users WHERE id = $1`, [id]);
     if (existing.length === 0) return res.status(404).json({ error: 'Not found' });
     const before = existing[0];
 
@@ -226,7 +226,7 @@ router.patch('/users/:id', adminOnly, async (req, res) => {
       let updated = before;
       if (params.length > 0) {
         params.push(id);
-        const sql = `UPDATE coexistence.forgecrm_users SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`;
+        const sql = `UPDATE coexistence.ridemitr_wa_users SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`;
         const result = await client.query(sql, params);
         updated = result.rows[0];
       }
@@ -283,7 +283,7 @@ router.post('/users/:id/reset-password', adminOnly, async (req, res) => {
   const id = req.params.id;
   try {
     const { rows: existing } = await pool.query(
-      `SELECT id, username FROM coexistence.forgecrm_users WHERE id = $1`,
+      `SELECT id, username FROM coexistence.ridemitr_wa_users WHERE id = $1`,
       [id]
     );
     if (existing.length === 0) return res.status(404).json({ error: 'Not found' });
@@ -291,7 +291,7 @@ router.post('/users/:id/reset-password', adminOnly, async (req, res) => {
     const password = req.body?.password?.trim() || generatePassword();
     const hash = await bcrypt.hash(password, 10);
     await pool.query(
-      `UPDATE coexistence.forgecrm_users SET password = $1, updated_at = NOW() WHERE id = $2`,
+      `UPDATE coexistence.ridemitr_wa_users SET password = $1, updated_at = NOW() WHERE id = $2`,
       [hash, id]
     );
     await auditLog({
@@ -313,11 +313,11 @@ router.delete('/users/:id', adminOnly, async (req, res) => {
       return res.status(400).json({ error: 'You cannot delete your own account' });
     }
     const { rows: existing } = await pool.query(
-      `SELECT username, role FROM coexistence.forgecrm_users WHERE id = $1`,
+      `SELECT username, role FROM coexistence.ridemitr_wa_users WHERE id = $1`,
       [id]
     );
     if (existing.length === 0) return res.status(404).json({ error: 'Not found' });
-    await pool.query(`DELETE FROM coexistence.forgecrm_users WHERE id = $1`, [id]);
+    await pool.query(`DELETE FROM coexistence.ridemitr_wa_users WHERE id = $1`, [id]);
     await auditLog({
       actor: req.user, action: 'user.delete',
       targetType: 'user', targetId: id, payload: existing[0],

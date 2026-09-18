@@ -1,8 +1,8 @@
-# ForgeCRM OSS — Session Handoff (Simplification Effort)
+# RideMitr WA OSS — Session Handoff (Simplification Effort)
 
-> **Read this first when resuming.** It records a multi-task session that simplified ForgeCRM OSS,
+> **Read this first when resuming.** It records a multi-task session that simplified RideMitr WA OSS,
 > module by module, into a **single-owner, stripped-down WhatsApp CRM**. Date: **2026-05-22**.
-> Login: `admin@forgemind.space` / your `ADMIN_PASSWORD` (or the password printed in the backend logs on first boot). App: backend `:3001`, frontend `:5173`.
+> Login: `admin@ridemitr.space` / your `ADMIN_PASSWORD` (or the password printed in the backend logs on first boot). App: backend `:3001`, frontend `:5173`.
 
 ## TL;DR — what this session did
 
@@ -97,22 +97,22 @@ routes + logic removed). Every task ended with a build + backend-boot + function
 
 ```powershell
 # Infra (Docker Desktop must be running)
-docker compose -p forgecrm-local -f "local-infra/docker-compose.yml" up -d   # pg :5432, redis :6379, minio :9000
+docker compose -p ridemitr-wa-local -f "local-infra/docker-compose.yml" up -d   # pg :5432, redis :6379, minio :9000
 # Backend
-cd "ForgeCRM OSS/backend"; node src/index.js          # http://localhost:3001 (/health -> {"ok":true})
+cd "RideMitr WA OSS/backend"; node src/index.js          # http://localhost:3001 (/health -> {"ok":true})
 # Frontend
-cd "ForgeCRM OSS/frontend"; npm run dev                # http://localhost:5173
+cd "RideMitr WA OSS/frontend"; npm run dev                # http://localhost:5173
 ```
-- Login `admin@forgemind.space` / `ADMIN_PASSWORD` (owner account, id=1 — preserved).
+- Login `admin@ridemitr.space` / `ADMIN_PASSWORD` (owner account, id=1 — preserved).
 - Backend was running as a background process during the session; it stops when the shell ends — restart with the command above.
 
 ## Open threads / NOT done (pick up here)
 
-- **Stale project memory:** `ForgeCRM OSS/CLAUDE.md`, `backend/CLAUDE.md`, `frontend/CLAUDE.md` still
+- **Stale project memory:** `RideMitr WA OSS/CLAUDE.md`, `backend/CLAUDE.md`, `frontend/CLAUDE.md` still
   describe removed features (SSE/`events.js`/`useServerEvents`, Fields tab, Users/Team tabs, roles/RBAC,
   `templateAnalytics.js`, multi-account, automation node types). **Offered to refresh; user hasn't asked yet.**
-- **Non-destructive DB leftovers** (data kept, logic gone): columns `forgecrm_users.role`,
-  `forgecrm_users.permissions`, `contacts.assigned_user_id`; tables `user_wa_assignments`,
+- **Non-destructive DB leftovers** (data kept, logic gone): columns `ridemitr_wa_users.role`,
+  `ridemitr_wa_users.permissions`, `contacts.assigned_user_id`; tables `user_wa_assignments`,
   `user_audit_log`, `broadcast_variable_mapping`, `message_reactions`, `contact_field_definitions`,
   `team_members`. No migration written to drop them (would be destructive) — do only if asked.
 - **Parked code retained:** automation engine handlers + builder node-type panels (handoff/action/etc.),
@@ -123,3 +123,17 @@ cd "ForgeCRM OSS/frontend"; npm run dev                # http://localhost:5173
 A single-owner CRM: one login, one WhatsApp account, linear keyword→message automations, template +
 text broadcasts with per-recipient logs, contacts with tags, media scoped to the account, and a
 single-user dashboard. Frontend bundle shrank from ~860 kB to ~826 kB over the cleanup passes.
+
+---
+
+### Connect with RideMitr
+
+- 🌐 **Web**: [www.RideMitr.com](https://www.ridemitr.com) | [ridemitr.in](https://ridemitr.in/)
+- 🍎 **iOS App**: [Download on App Store](https://apps.apple.com/in/app/ridemitr/id6775524884)
+- 🤖 **Android App**: [Download on Google Play](https://play.google.com/store/apps/details?id=com.md.ridemitr&pcampaignid=web_share)
+- 👉 **WhatsApp Community**: [Join Here](https://chat.whatsapp.com/Dz1MeOgstcBFcZ7kf7i47o)
+- 📸 **Instagram**: [@ridemitr_india](https://www.instagram.com/ridemitr_india)
+- 💼 **LinkedIn**: [RideMitr](https://www.linkedin.com/company/ridemitr/posts/?viewAsMember=true)
+- 📘 **Facebook**: [ridemitrai](https://www.facebook.com/people/RideMitr/61570635166630/)
+- 🎥 **YouTube**: [@ridemitr_ai](https://www.youtube.com/@ridemitr_ai)
+- 💻 **GitHub**: [Nareshbhati2722](https://github.com/Nareshbhati2722)

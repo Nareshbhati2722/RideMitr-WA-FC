@@ -1,4 +1,4 @@
-# ForgeChat — standalone deployment. PostgreSQL + Redis + backend + frontend.
+# RideMitr WA — standalone deployment. PostgreSQL + Redis + backend + frontend.
 #
 # Quick start (no configuration needed):
 #   docker compose up -d
@@ -15,8 +15,10 @@
 # HTTP_PORT, or backend feature keys (e.g. OPENAI_API_KEY). None are required.
 # Requires Docker Compose v2.24+.
 
+name: ridemitr-wa
+
 services:
-  forgecrm-db:
+  ridemitr-wa-db:
     image: postgres:15
     restart: unless-stopped
     environment:
@@ -24,7 +26,7 @@ services:
       POSTGRES_DB: postgres
       # Internal-only credential (the DB has no host port). Override via root .env
       # for hardened setups; changing it later requires `docker compose down -v`.
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-forgechat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ridemitr-wa}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -44,17 +46,17 @@ services:
       timeout: 3s
       retries: 12
 
-  forgecrm-backend:
+  ridemitr-wa-backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: "3011"                     # the frontend (nginx) proxies to forgecrm-backend:3011
-      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-forgechat}@forgecrm-db:5432/postgres
+      PORT: "3011"                     # the frontend (nginx) proxies to ridemitr-wa-backend:3011
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-ridemitr-wa}@ridemitr-wa-db:5432/postgres
       REDIS_URL: redis://redis:6379
-      FORGECHAT_DATA_DIR: /app/data    # persisted auto-generated secrets live here
+      RIDEMITR_WA_DATA_DIR: /app/data    # persisted auto-generated secrets live here
     env_file:
       - path: .env                     # optional advanced overrides; absent is fine
         required: false
@@ -63,19 +65,19 @@ services:
       - media:/app/media               # downloaded inbound/outbound chat media
       - uploads:/app/uploads           # profile pictures / uploaded files
     depends_on:
-      forgecrm-db:
+      ridemitr-wa-db:
         condition: service_healthy
       redis:
         condition: service_healthy
 
-  forgecrm-frontend:
+  ridemitr-wa-frontend:
     build:
       context: ./frontend
     restart: unless-stopped
     ports:
       - "${HTTP_PORT:-8080}:80"        # open http://localhost:8080
     depends_on:
-      - forgecrm-backend
+      - ridemitr-wa-backend
 
   # Optional quick tunnel so Meta can reach your webhook on a LOCAL install —
   # no account, no install. Start it with:  docker compose --profile tunnel up -d
@@ -86,9 +88,9 @@ services:
     image: cloudflare/cloudflared:latest
     profiles: ["tunnel"]
     restart: unless-stopped
-    command: tunnel --no-autoupdate --url http://forgecrm-frontend:80
+    command: tunnel --no-autoupdate --url http://ridemitr-wa-frontend:80
     depends_on:
-      - forgecrm-frontend
+      - ridemitr-wa-frontend
 
 volumes:
   pgdata:

@@ -9,7 +9,7 @@
 
 CREATE TABLE IF NOT EXISTS coexistence.oauth_credentials (
   id                         BIGSERIAL PRIMARY KEY,
-  user_id                    BIGINT NOT NULL REFERENCES coexistence.forgecrm_users(id) ON DELETE CASCADE,
+  user_id                    BIGINT NOT NULL REFERENCES coexistence.ridemitr_wa_users(id) ON DELETE CASCADE,
   provider                   TEXT NOT NULL,                       -- 'google' in v1
   account_label              TEXT NOT NULL,                       -- e.g. user's Google email
   refresh_token_encrypted    TEXT NOT NULL,

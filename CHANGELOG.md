@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to ForgeChat are documented in this file.
+All notable changes to RideMitr WA are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   or adds a new row if none exists. No duplicate rows and no row-number/column
   tracking — the reliable way to keep one evolving row per contact.
 - **CRM write-back tools** — an agent can act on its own conversation's contact
-  inside ForgeChat: save the name, add tags, and set custom fields (gated by an
+  inside RideMitr WA: save the name, add tags, and set custom fields (gated by an
   "Update CRM" toggle on the agent).
 - **Human handoff** — an `escalate_to_human` tool, configurable handoff keywords,
   and round-robin assignment to a chosen set of team members. Handing off pauses
@@ -65,9 +65,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Brand-language pass for Meta / WhatsApp guidelines:** dropped "official … /
   unofficial hack" framing in README, reworded the login splash to no longer
-  read as if ForgeChat *is* the WhatsApp Business Platform, switched API/account
+  read as if RideMitr WA *is* the WhatsApp Business Platform, switched API/account
   naming to the documented "WhatsApp Cloud API" and "WhatsApp Business Account",
-  scoped trademark ownership in `TRADEMARK.md` to **Forgemind AI** only and
+  scoped trademark ownership in `TRADEMARK.md` to **RideMitr AI** only and
   added a third-party trademarks section acknowledging Meta / WhatsApp marks,
   and added an affiliation disclaimer to the README footer.
 
@@ -88,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Migrations now build a fresh database from scratch — added the missing
-  `forgecrm_users` base migration that later migrations depend on.
+  `ridemitr_wa_users` base migration that later migrations depend on.
 
 ### Security
 - The first-run admin is no longer seeded with a hardcoded default password. It
@@ -97,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-05-23
 
-Initial release of ForgeChat — a full-stack WhatsApp CRM built on the Meta
+Initial release of RideMitr WA — a full-stack WhatsApp CRM built on the Meta
 WhatsApp Cloud API.
 
 ### Added
@@ -131,14 +131,28 @@ WhatsApp Cloud API.
   concurrency-2 media-download queue.
 
 ### Security
-- JWT authentication in httpOnly, SameSite-strict cookies (`forgecrm_token`).
+- JWT authentication in httpOnly, SameSite-strict cookies (`ridemitr_wa_token`).
 - Meta access tokens encrypted at rest with AES-256-GCM.
 - Dedicated webhook verify token, separate from the JWT signing secret.
 - All database access via parameterized `pg` queries (no ORM, no string
   interpolation).
 - `helmet` and a 600 req/min/user rate limiter on the API surface.
 
-[Unreleased]: https://github.com/Forgemind-git/ForgeChat/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/Forgemind-git/ForgeChat/compare/v1.0.1...v1.1.0
-[1.0.1]: https://github.com/Forgemind-git/ForgeChat/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/Forgemind-git/ForgeChat/releases/tag/v1.0.0
+[Unreleased]: https://github.com/Nareshbhati2722/RideMitr-WA-FC/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Nareshbhati2722/RideMitr-WA-FC/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/Nareshbhati2722/RideMitr-WA-FC/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/Nareshbhati2722/RideMitr-WA-FC/releases/tag/v1.0.0
+
+---
+
+### Connect with RideMitr
+
+- 🌐 **Web**: [www.RideMitr.com](https://www.ridemitr.com) | [ridemitr.in](https://ridemitr.in/)
+- 🍎 **iOS App**: [Download on App Store](https://apps.apple.com/in/app/ridemitr/id6775524884)
+- 🤖 **Android App**: [Download on Google Play](https://play.google.com/store/apps/details?id=com.md.ridemitr&pcampaignid=web_share)
+- 👉 **WhatsApp Community**: [Join Here](https://chat.whatsapp.com/Dz1MeOgstcBFcZ7kf7i47o)
+- 📸 **Instagram**: [@ridemitr_india](https://www.instagram.com/ridemitr_india)
+- 💼 **LinkedIn**: [RideMitr](https://www.linkedin.com/company/ridemitr/posts/?viewAsMember=true)
+- 📘 **Facebook**: [ridemitrai](https://www.facebook.com/people/RideMitr/61570635166630/)
+- 🎥 **YouTube**: [@ridemitr_ai](https://www.youtube.com/@ridemitr_ai)
+- 💻 **GitHub**: [Nareshbhati2722](https://github.com/Nareshbhati2722)

@@ -1,11 +1,11 @@
 ---
-name: forgechat-ai-agent-skill
-description: Generate a production-ready system prompt for a ForgeChat WhatsApp AI agent (order bot, booking bot, lead-capture bot, etc.) AND, when a ForgeChat MCP connector is available, build/configure that agent directly in ForgeChat over MCP. Use this skill WHENEVER the user wants to "write a prompt for an agent", "build a WhatsApp bot prompt", "create a system prompt for a client's chatbot/order assistant/booking assistant", "create/build a ForgeChat agent via MCP", set up a ForgeChat agent, or asks for an agent prompt that uses send_media / Google Sheets / HTTP tools and a step-by-step conversation flow. First interview the user for the missing details, then assemble the prompt in the exact structure below; if an MCP connector is connected, optionally create the agent with it (Phase 4). Do NOT free-write an agent prompt without this skill — the structure (step-locked flow, tool discipline, verbatim copy, anti-hallucination guardrails) is what makes these bots reliable.
+name: ridemitr-wa-ai-agent-skill
+description: Generate a production-ready system prompt for a RideMitr WA WhatsApp AI agent (order bot, booking bot, lead-capture bot, etc.) AND, when a RideMitr WA MCP connector is available, build/configure that agent directly in RideMitr WA over MCP. Use this skill WHENEVER the user wants to "write a prompt for an agent", "build a WhatsApp bot prompt", "create a system prompt for a client's chatbot/order assistant/booking assistant", "create/build a RideMitr WA agent via MCP", set up a RideMitr WA agent, or asks for an agent prompt that uses send_media / Google Sheets / HTTP tools and a step-by-step conversation flow. First interview the user for the missing details, then assemble the prompt in the exact structure below; if an MCP connector is connected, optionally create the agent with it (Phase 4). Do NOT free-write an agent prompt without this skill — the structure (step-locked flow, tool discipline, verbatim copy, anti-hallucination guardrails) is what makes these bots reliable.
 ---
 
-# ForgeChat AI Agent Prompt Builder
+# RideMitr WA AI Agent Prompt Builder
 
-This skill produces the **system prompt** that drives a ForgeChat WhatsApp AI agent. The output is a single block of instructions the operator pastes into the agent node (n8n / ForgeChat). These agents run on WhatsApp, fire tools like `send_media` and a Google Sheets append, and read the customer's number from the conversation context.
+This skill produces the **system prompt** that drives a RideMitr WA WhatsApp AI agent. The output is a single block of instructions the operator pastes into the agent node (n8n / RideMitr WA). These agents run on WhatsApp, fire tools like `send_media` and a Google Sheets append, and read the customer's number from the conversation context.
 
 The job has two phases: **interview** the operator for the inputs, then **assemble** the prompt from the template. Never skip the interview — a vague prompt produces an unreliable bot.
 
@@ -28,7 +28,7 @@ Collect these inputs:
 - Currency — default INR (₹).
 - The full list, grouped into sections, each item with a price. For order bots this is a menu/product list; for booking bots it's services + prices/durations; for lead bots it may be plans/packages.
 
-**C. Media assets (ForgeChat `send_media` groups)**
+**C. Media assets (RideMitr WA `send_media` groups)**
 - Which pre-configured media groups exist and their `group_index` (integer). Typical: `0` = menu / catalog image, `1` = payment link. There can be more (e.g. `2` = location, `3` = brochure).
 - For each: in which step it is sent, and how many times (almost always **exactly once**).
 
@@ -115,11 +115,11 @@ Keep all eight design principles regardless of flow.
 
 ---
 
-## Phase 4 — Build the agent in ForgeChat over MCP
+## Phase 4 — Build the agent in RideMitr WA over MCP
 
-Phases 1–3 produce the **system prompt**. If a ForgeChat **MCP connector** is connected, you can also **create and configure the agent directly in ForgeChat** instead of pasting the prompt by hand — Claude drives the build through the MCP tools.
+Phases 1–3 produce the **system prompt**. If a RideMitr WA **MCP connector** is connected, you can also **create and configure the agent directly in RideMitr WA** instead of pasting the prompt by hand — Claude drives the build through the MCP tools.
 
-**Connect once:** in ForgeChat → **Admin Settings → MCP Tools**, turn on the master switch + capabilities, **Generate key**, then add the remote connector URL `https://<your-forgechat-domain>/api/mcp/http/<key>` in Claude (Settings → Connectors → Add custom connector). The connector is per-deployment — it manages that instance's data only.
+**Connect once:** in RideMitr WA → **Admin Settings → MCP Tools**, turn on the master switch + capabilities, **Generate key**, then add the remote connector URL `https://<your-ridemitr-wa-domain>/api/mcp/http/<key>` in Claude (Settings → Connectors → Add custom connector). The connector is per-deployment — it manages that instance's data only.
 
 **Golden rule (same as the prompt phase): never invent ids.** Fetch the real options with the discovery tools, let the user choose, summarize, and get an explicit confirmation before `create_agent`.
 
@@ -152,3 +152,17 @@ Build flow:
 - [ ] WhatsApp number sourced from context, never requested.
 - [ ] Each step's reply written out verbatim in quotes with `<placeholders>` for dynamic values.
 - [ ] Delivered in one fenced code block; offered as a downloadable file.
+
+---
+
+### Connect with RideMitr
+
+- 🌐 **Web**: [www.RideMitr.com](https://www.ridemitr.com) | [ridemitr.in](https://ridemitr.in/)
+- 🍎 **iOS App**: [Download on App Store](https://apps.apple.com/in/app/ridemitr/id6775524884)
+- 🤖 **Android App**: [Download on Google Play](https://play.google.com/store/apps/details?id=com.md.ridemitr&pcampaignid=web_share)
+- 👉 **WhatsApp Community**: [Join Here](https://chat.whatsapp.com/Dz1MeOgstcBFcZ7kf7i47o)
+- 📸 **Instagram**: [@ridemitr_india](https://www.instagram.com/ridemitr_india)
+- 💼 **LinkedIn**: [RideMitr](https://www.linkedin.com/company/ridemitr/posts/?viewAsMember=true)
+- 📘 **Facebook**: [ridemitrai](https://www.facebook.com/people/RideMitr/61570635166630/)
+- 🎥 **YouTube**: [@ridemitr_ai](https://www.youtube.com/@ridemitr_ai)
+- 💻 **GitHub**: [Nareshbhati2722](https://github.com/Nareshbhati2722)
