@@ -37,6 +37,7 @@ function publicShape(row, { includeSecrets = false } = {}) {
     phoneNumberId: row.phone_number_id,
     wabaId: row.waba_id,
     metaAppId: row.meta_app_id,
+    provider: row.provider || 'cloud',
     isDefault: row.is_default,
     isActive: row.is_active,
     healthStatus: row.health_status || 'unknown',
@@ -107,9 +108,14 @@ router.get('/whatsapp-accounts/:id', adminOnly, async (req, res) => {
 
 router.post('/whatsapp-accounts', adminOnly, async (req, res) => {
   try {
-    const { phoneNumberId, wabaId, accessToken, verifyToken, metaAppId } = req.body || {};
-    if (!phoneNumberId || !wabaId || !accessToken) {
-      return res.status(400).json({ error: 'Phone Number ID, WhatsApp Business Account ID and Permanent Access Token are required' });
+    const { phoneNumberId, wabaId, accessToken, verifyToken, metaAppId, provider, displayPhoneNumber: reqDisplayPhone } = req.body || {};
+    const prov = provider || 'cloud';
+
+    if (prov === 'cloud' && (!phoneNumberId || !wabaId || !accessToken)) {
+      return res.status(400).json({ error: 'Phone Number ID, WhatsApp Business Account ID and Permanent Access Token are required for cloud accounts' });
+    }
+    if (prov === 'web' && !reqDisplayPhone) {
+      return res.status(400).json({ error: 'Display Phone Number is required for web accounts' });
     }
 
     // Single-account system: refuse to register a second WhatsApp Business account.
@@ -118,40 +124,37 @@ router.post('/whatsapp-accounts', adminOnly, async (req, res) => {
       return res.status(409).json({ error: 'Only one WhatsApp Business account is allowed. Edit the existing account instead.' });
     }
 
-    // Best-effort: resolve the human-readable number + verified business name
-    // from Meta so chat threading and display still work without the user
-    // typing them. Saving proceeds even if the lookup fails (logged).
-    let displayName = `WhatsApp ${wabaId.trim()}`;
-    let displayPhoneNumber = '';
-    try {
-      const meta = await fetchPhoneMeta(phoneNumberId.trim(), accessToken.trim());
-      if (meta.verified_name) displayName = meta.verified_name;
-      if (meta.display_phone_number) displayPhoneNumber = String(meta.display_phone_number).replace(/\D/g, '');
-    } catch (e) {
-      // Don't save a half-working account. The lookup doubles as a credential
-      // check, so a failure here means the Phone Number ID + token combination
-      // can't talk to Meta (wrong ID, wrong app, or an expired token — a Meta
-      // *test number*'s token expires every 24h). Surface Meta's reason.
-      console.warn('[whatsapp-accounts] Meta credential check failed:', e.message);
-      return res.status(400).json({
-        error: `Couldn't verify this WhatsApp number with Meta. Double-check your Phone Number ID and access token (a test number's token expires every 24 hours). Meta said: ${e.message}`,
-      });
+    let displayName = `WhatsApp ${prov === 'web' ? reqDisplayPhone : wabaId.trim()}`;
+    let displayPhoneNumber = prov === 'web' ? reqDisplayPhone.trim().replace(/\D/g, '') : '';
+    let finalPhoneId = prov === 'web' ? displayPhoneNumber : phoneNumberId.trim();
+
+    if (prov === 'cloud') {
+      try {
+        const meta = await fetchPhoneMeta(finalPhoneId, accessToken.trim());
+        if (meta.verified_name) displayName = meta.verified_name;
+        if (meta.display_phone_number) displayPhoneNumber = String(meta.display_phone_number).replace(/\D/g, '');
+      } catch (e) {
+        console.warn('[whatsapp-accounts] Meta credential check failed:', e.message);
+        return res.status(400).json({
+          error: `Couldn't verify this WhatsApp number with Meta. Double-check your Phone Number ID and access token (a test number's token expires every 24 hours). Meta said: ${e.message}`,
+        });
+      }
     }
 
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      // The lone account is always the default and active.
       const { rows } = await client.query(
         `INSERT INTO coexistence.whatsapp_accounts
           (display_name, display_phone_number, phone_number_id, waba_id, meta_app_id,
-           access_token_encrypted, verify_token_encrypted, is_default, is_active)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,TRUE,TRUE)
+           access_token_encrypted, verify_token_encrypted, is_default, is_active, provider)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,TRUE,TRUE,$8)
          RETURNING *`,
         [
-          displayName, displayPhoneNumber, phoneNumberId.trim(), wabaId.trim(),
+          displayName, displayPhoneNumber, finalPhoneId, prov === 'web' ? 'web' : wabaId.trim(),
           metaAppId?.trim() || null,
-          encrypt(accessToken.trim()), encrypt((verifyToken || '').trim()),
+          encrypt(prov === 'web' ? 'web' : accessToken.trim()), encrypt((verifyToken || '').trim()),
+          prov
         ]
       );
       await client.query('COMMIT');
@@ -171,7 +174,7 @@ router.post('/whatsapp-accounts', adminOnly, async (req, res) => {
 
 router.put('/whatsapp-accounts/:id', adminOnly, async (req, res) => {
   try {
-    const { phoneNumberId, wabaId, accessToken, verifyToken, metaAppId, isActive } = req.body || {};
+    const { phoneNumberId, wabaId, accessToken, verifyToken, metaAppId, isActive, provider, displayPhoneNumber: reqDisplayPhone } = req.body || {};
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -183,30 +186,41 @@ router.put('/whatsapp-accounts/:id', adminOnly, async (req, res) => {
         return res.status(404).json({ error: 'Not found' });
       }
       const ex = existingRows[0];
+      const prov = provider || ex.provider || 'cloud';
 
-      const newPhoneId = phoneNumberId != null ? phoneNumberId.trim() : ex.phone_number_id;
-      const newWaba = wabaId != null ? wabaId.trim() : ex.waba_id;
-      const tokenChanged = !!(accessToken && accessToken.trim());
-      const effectiveToken = tokenChanged ? accessToken.trim() : decrypt(ex.access_token_encrypted);
-
-      // Re-derive the display fields from Meta when the number or token changes.
+      let newPhoneId = ex.phone_number_id;
+      let newWaba = ex.waba_id;
+      let tokenChanged = false;
+      let effectiveToken = decrypt(ex.access_token_encrypted);
       let displayName = ex.display_name;
       let displayPhoneNumber = ex.display_phone_number;
-      if ((phoneNumberId != null && newPhoneId !== ex.phone_number_id) || tokenChanged) {
-        try {
-          const meta = await fetchPhoneMeta(newPhoneId, effectiveToken);
-          if (meta.verified_name) displayName = meta.verified_name;
-          if (meta.display_phone_number) displayPhoneNumber = String(meta.display_phone_number).replace(/\D/g, '');
-        } catch (e) {
-          // Same credential check as on connect: if the changed number/token
-          // can't reach Meta, refuse the update and tell the user why instead
-          // of silently keeping stale values.
-          console.warn('[whatsapp-accounts] Meta credential check failed on update:', e.message);
-          await client.query('ROLLBACK');
-          return res.status(400).json({
-            error: `Couldn't verify this WhatsApp number with Meta. Double-check your Phone Number ID and access token (a test number's token expires every 24 hours). Meta said: ${e.message}`,
-          });
+
+      if (prov === 'cloud') {
+        newPhoneId = phoneNumberId != null ? phoneNumberId.trim() : ex.phone_number_id;
+        newWaba = wabaId != null ? wabaId.trim() : ex.waba_id;
+        tokenChanged = !!(accessToken && accessToken.trim());
+        effectiveToken = tokenChanged ? accessToken.trim() : effectiveToken;
+
+        if ((phoneNumberId != null && newPhoneId !== ex.phone_number_id) || tokenChanged || ex.provider === 'web') {
+          try {
+            const meta = await fetchPhoneMeta(newPhoneId, effectiveToken);
+            if (meta.verified_name) displayName = meta.verified_name;
+            if (meta.display_phone_number) displayPhoneNumber = String(meta.display_phone_number).replace(/\D/g, '');
+          } catch (e) {
+            console.warn('[whatsapp-accounts] Meta credential check failed on update:', e.message);
+            await client.query('ROLLBACK');
+            return res.status(400).json({
+              error: `Couldn't verify this WhatsApp number with Meta. Double-check your Phone Number ID and access token (a test number's token expires every 24 hours). Meta said: ${e.message}`,
+            });
+          }
         }
+      } else if (prov === 'web') {
+        displayPhoneNumber = reqDisplayPhone ? reqDisplayPhone.trim().replace(/\D/g, '') : ex.display_phone_number;
+        displayName = `WhatsApp ${displayPhoneNumber}`;
+        newPhoneId = displayPhoneNumber;
+        newWaba = 'web';
+        tokenChanged = true;
+        effectiveToken = 'web';
       }
 
       const sets = ['updated_at = NOW()'];
@@ -217,10 +231,10 @@ router.put('/whatsapp-accounts/:id', adminOnly, async (req, res) => {
       push('display_phone_number', displayPhoneNumber);
       push('phone_number_id', newPhoneId);
       push('waba_id', newWaba);
+      push('provider', prov);
       if (metaAppId !== undefined) push('meta_app_id', metaAppId?.trim() || null);
       if (tokenChanged) {
         push('access_token_encrypted', encrypt(effectiveToken));
-        // Reset health on token update so the UI banner clears.
         push('health_status', 'unknown');
         push('last_error_message', null);
       }
@@ -281,6 +295,7 @@ function rowToCreds(r) {
     wabaId: r.waba_id,
     accessToken: decrypt(r.access_token_encrypted),
     isActive: r.is_active,
+    provider: r.provider || 'cloud',
   };
 }
 
@@ -322,5 +337,54 @@ async function getAccountByPhoneNumber(phoneOrId) {
   );
   return rowToCreds(rows[0]);
 }
+
+const baileysService = require('../services/baileysService');
+
+router.get('/whatsapp-accounts/qr/:phone', adminOnly, async (req, res) => {
+  try {
+    const { phone } = req.params;
+    // Check if account is actually web provider
+    const acc = await getAccountByPhoneNumber(phone);
+    if (!acc) return res.status(404).json({ error: 'Account not found' });
+    if (acc.provider !== 'web') return res.status(400).json({ error: 'Not a web provider account' });
+    
+    const sock = baileysService.getSocket(phone);
+    if (sock) {
+      return res.json({ status: 'connected' });
+    }
+
+    const qr = baileysService.getQrCode(phone);
+    if (qr) {
+      const QRCode = require('qrcode');
+      const qrDataUrl = await QRCode.toDataURL(qr);
+      return res.json({ status: 'qr', qr: qrDataUrl });
+    }
+
+    // Try starting if not started
+    try {
+      await baileysService.startBaileys(phone, acc.id);
+    } catch (e) {
+      console.error(e);
+    }
+
+    res.json({ status: 'starting' });
+  } catch (err) {
+    console.error('[whatsapp-accounts] qr error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch QR' });
+  }
+});
+
+router.post('/whatsapp-accounts/logout/:phone', adminOnly, async (req, res) => {
+  try {
+    const { phone } = req.params;
+    const sock = baileysService.getSocket(phone);
+    if (sock) {
+      await sock.logout();
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to logout' });
+  }
+});
 
 module.exports = { router, getAccountWithToken, getAccountByPhoneNumber, getSingleAccount };
