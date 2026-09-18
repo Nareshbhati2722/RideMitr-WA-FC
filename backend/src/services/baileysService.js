@@ -170,6 +170,86 @@ async function startBaileys(displayPhoneNumber, accountId) {
     }
   });
 
+  sock.ev.on('messaging-history.set', async ({ chats, contacts, messages, isLatest }) => {
+    console.log(`[Baileys] History Sync for ${displayPhoneNumber}: ${chats?.length || 0} chats, ${contacts?.length || 0} contacts, ${messages?.length || 0} messages`);
+    
+    // Upsert Contacts
+    if (contacts && contacts.length > 0) {
+      for (const c of contacts) {
+        if (!c.id || c.id.endsWith('@g.us')) continue;
+        const contactNum = c.id.split('@')[0];
+        const pushName = c.name || c.notify || c.verifiedName || null;
+        if (!pushName) continue;
+        try {
+          await pool.query(
+            `INSERT INTO coexistence.contacts (wa_number, contact_number, profile_name)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (wa_number, contact_number)
+             DO UPDATE SET profile_name = COALESCE(EXCLUDED.profile_name, coexistence.contacts.profile_name)`,
+            [displayPhoneNumber, contactNum, pushName]
+          );
+        } catch (e) {
+          console.error('[Baileys] History sync contact insert error', e);
+        }
+      }
+    }
+
+    // Upsert Messages
+    if (messages && messages.length > 0) {
+      for (const msg of messages) {
+        if (!msg.message) continue;
+        
+        const remoteJid = msg.key.remoteJid;
+        if (!remoteJid || remoteJid.endsWith('@g.us') || remoteJid === 'status@broadcast') continue;
+        
+        const contactNum = remoteJid.split('@')[0];
+        const messageId = msg.key.id;
+        const direction = msg.key.fromMe ? 'outgoing' : 'incoming';
+        const timestampMillis = msg.messageTimestamp ? Number(msg.messageTimestamp) * 1000 : Date.now();
+        const timestamp = new Date(timestampMillis).toISOString();
+
+        let messageType = 'unknown';
+        let messageBody = null;
+        
+        if (msg.message.conversation) {
+          messageType = 'text';
+          messageBody = msg.message.conversation;
+        } else if (msg.message.extendedTextMessage) {
+          messageType = 'text';
+          messageBody = msg.message.extendedTextMessage.text;
+        } else if (msg.message.imageMessage) {
+          messageType = 'image';
+          messageBody = msg.message.imageMessage.caption || '';
+        } else if (msg.message.videoMessage) {
+          messageType = 'video';
+          messageBody = msg.message.videoMessage.caption || '';
+        } else if (msg.message.documentMessage) {
+          messageType = 'document';
+          messageBody = msg.message.documentMessage.fileName || msg.message.documentMessage.caption || '';
+        } else if (msg.message.audioMessage) {
+          messageType = 'audio';
+          messageBody = '';
+        }
+        
+        try {
+          await pool.query(
+            `INSERT INTO coexistence.chat_history
+              (message_id, phone_number_id, wa_number, contact_number, to_number,
+               direction, message_type, message_body, raw_payload, status, timestamp)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+             ON CONFLICT (message_id) DO NOTHING`,
+            [
+              messageId, displayPhoneNumber, displayPhoneNumber, contactNum, displayPhoneNumber,
+              direction, messageType, messageBody, JSON.stringify(msg), direction === 'outgoing' ? 'sent' : 'received', timestamp
+            ]
+          );
+        } catch (err) {
+          console.error('[Baileys] History sync DB insert failed', err);
+        }
+      }
+    }
+  });
+
   return sock;
 }
 
