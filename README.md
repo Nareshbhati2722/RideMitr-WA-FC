@@ -57,15 +57,9 @@ It connects to the **WhatsApp Cloud API** (part of the **WhatsApp Business Platf
 
 ## 📸 What it looks like
 
-| Team Inbox | Auto-reply Builder |
-| :---: | :---: |
-| ![Chats](docs/ui-screenshots/11-chats-conversation.png) | ![Automations](docs/ui-screenshots/04-automation-builder.png) |
-| **Message Templates** | **Customer Database** |
-| ![Templates](docs/ui-screenshots/08-template-builder-form.png) | ![Contacts](docs/ui-screenshots/12-contacts.png) |
-| **Bulk Broadcasts** | **Settings** |
-| ![Bulk](docs/ui-screenshots/13-bulk-message.png) | ![Admin](docs/ui-screenshots/15-admin-general.png) |
-| **🧠 AI Agents** | **AI Agent Builder** |
-| ![AI Agents](docs/ui-screenshots/22-ai-agents.png) | ![AI Agent Builder](docs/ui-screenshots/23-ai-agent-builder.png) |
+| Overview |
+| :---: |
+| ![RideMitr WA Overview](docs/ui-screenshots/00-ridemitr-overview.png) |
 
 ---
 
