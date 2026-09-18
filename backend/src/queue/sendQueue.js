@@ -60,33 +60,65 @@ async function processJob(job) {
   };
 
   let result;
-  try {
+  if (account.provider === 'web') {
+    const baileysService = require('../services/baileysService');
+    const sock = baileysService.getSocket(account.phoneNumberId);
+    if (!sock) throw new Error(`Baileys socket not connected for ${account.displayPhoneNumber}`);
+    
+    const jid = `${to}@s.whatsapp.net`;
+    let msgContent = {};
     if (kind === 'text') {
-      result = await sendText({ ...args, body: payload.body, previewUrl: payload.previewUrl, contextMessageId: payload.contextMessageId });
-    } else if (kind === 'template') {
-      result = await sendTemplate({ ...args, templateName: payload.name, languageCode: payload.languageCode, components: payload.components });
+      msgContent = { text: payload.body };
     } else if (kind === 'media') {
-      result = await sendMedia({ ...args, type: payload.type, mediaId: payload.mediaId, link: payload.link, caption: payload.caption, filename: payload.filename, contextMessageId: payload.contextMessageId });
-    } else if (kind === 'interactive') {
-      result = await sendInteractive({ ...args, interactive: payload.interactive });
-    } else if (kind === 'location') {
-      result = await sendLocation({ ...args, latitude: payload.latitude, longitude: payload.longitude, name: payload.name, address: payload.address });
-    } else if (kind === 'contacts') {
-      result = await sendContacts({ ...args, contacts: payload.contacts });
-    } else if (kind === 'reaction') {
-      result = await sendReaction({ ...args, messageId: payload.messageId, emoji: payload.emoji });
+      const mime = payload.mimeType || (payload.type === 'image' ? 'image/jpeg' : 'application/octet-stream');
+      const url = payload.link; 
+      // If we only have mediaId, we can't easily send it via Baileys without downloading. 
+      // Assuming link is provided for now.
+      if (payload.type === 'image') msgContent = { image: { url }, caption: payload.caption };
+      else if (payload.type === 'video') msgContent = { video: { url }, caption: payload.caption };
+      else if (payload.type === 'document') msgContent = { document: { url }, mimetype: mime, fileName: payload.filename };
+      else throw new Error('Unsupported media type for web provider');
     } else {
-      throw new Error(`unknown send kind: ${kind}`);
+      throw new Error(`Unsupported send kind for web provider: ${kind}`);
     }
-    await markAccountHealth(account.id, 'healthy');
-  } catch (err) {
-    const cls = classifyMetaError(err);
-    await markAccountHealth(account.id, cls, err.message);
-    // Don't retry auth failures — they'll fail every time until token is fixed
-    if (cls === 'invalid_token') {
-      err.skipRetry = true;
+
+    try {
+      const sentMsg = await sock.sendMessage(jid, msgContent);
+      result = { messages: [{ id: sentMsg.key.id }] };
+      await markAccountHealth(account.id, 'healthy');
+    } catch (err) {
+      await markAccountHealth(account.id, 'other_error', err.message);
+      throw err;
     }
-    throw err;
+  } else {
+    try {
+      if (kind === 'text') {
+        result = await sendText({ ...args, body: payload.body, previewUrl: payload.previewUrl, contextMessageId: payload.contextMessageId });
+      } else if (kind === 'template') {
+        result = await sendTemplate({ ...args, templateName: payload.name, languageCode: payload.languageCode, components: payload.components });
+      } else if (kind === 'media') {
+        result = await sendMedia({ ...args, type: payload.type, mediaId: payload.mediaId, link: payload.link, caption: payload.caption, filename: payload.filename, contextMessageId: payload.contextMessageId });
+      } else if (kind === 'interactive') {
+        result = await sendInteractive({ ...args, interactive: payload.interactive });
+      } else if (kind === 'location') {
+        result = await sendLocation({ ...args, latitude: payload.latitude, longitude: payload.longitude, name: payload.name, address: payload.address });
+      } else if (kind === 'contacts') {
+        result = await sendContacts({ ...args, contacts: payload.contacts });
+      } else if (kind === 'reaction') {
+        result = await sendReaction({ ...args, messageId: payload.messageId, emoji: payload.emoji });
+      } else {
+        throw new Error(`unknown send kind: ${kind}`);
+      }
+      await markAccountHealth(account.id, 'healthy');
+    } catch (err) {
+      const cls = classifyMetaError(err);
+      await markAccountHealth(account.id, cls, err.message);
+      // Don't retry auth failures — they'll fail every time until token is fixed
+      if (cls === 'invalid_token') {
+        err.skipRetry = true;
+      }
+      throw err;
+    }
   }
 
   const wamid = result?.messages?.[0]?.id;

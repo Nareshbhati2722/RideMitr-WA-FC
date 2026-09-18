@@ -726,11 +726,14 @@ function WhatsappAccountsTab() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
-    phoneNumberId: '', wabaId: '', accessToken: '', verifyToken: '', metaAppId: '',
+    provider: 'cloud', phoneNumberId: '', wabaId: '', accessToken: '', verifyToken: '', metaAppId: '', displayPhoneNumber: ''
   });
   const [showToken, setShowToken] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  
+  const [qrCode, setQrCode] = useState(null);
+  const [qrLoading, setQrLoading] = useState(false);
 
   // The callback URL to register in the Meta App Dashboard — always the live origin.
   const webhookUrl = `${window.location.origin}/api/webhook/whatsapp`;
@@ -755,38 +758,73 @@ function WhatsappAccountsTab() {
   };
 
   useEffect(() => { refresh(); }, []);
+  
+  // Poll QR code if we have a web account
+  useEffect(() => {
+    let interval;
+    const webAccount = accounts.find(a => a.provider === 'web');
+    if (webAccount) {
+      const fetchQr = async () => {
+        try {
+          const res = await fetch(`/api/whatsapp-accounts/qr/${webAccount.displayPhoneNumber}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+          const data = await res.json();
+          if (data.status === 'qr' && data.qr) {
+            setQrCode(data.qr);
+          } else if (data.status === 'connected') {
+            setQrCode('CONNECTED');
+          } else {
+            setQrCode(null);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      fetchQr();
+      interval = setInterval(fetchQr, 5000); // Poll every 5s
+    }
+    return () => clearInterval(interval);
+  }, [accounts]);
 
   const startCreate = () => {
     setEditing(null);
-    setForm({ phoneNumberId: '', wabaId: '', accessToken: '', verifyToken: '', metaAppId: '' });
+    setForm({ provider: 'cloud', phoneNumberId: '', wabaId: '', accessToken: '', verifyToken: '', metaAppId: '', displayPhoneNumber: '' });
     setShowToken(false);
     setShowForm(true);
   };
   const startEdit = (acc) => {
     setEditing(acc);
     setForm({
+      provider: acc.provider || 'cloud',
       phoneNumberId: acc.phoneNumberId || '',
       wabaId: acc.wabaId || '',
       accessToken: '',                 // blank = keep the stored token
       verifyToken: acc.verifyToken || '',
       metaAppId: acc.metaAppId || '',
+      displayPhoneNumber: acc.displayPhoneNumber || ''
     });
     setShowToken(false);
     setShowForm(true);
   };
 
   const save = async () => {
-    if (!form.phoneNumberId.trim() || !form.wabaId.trim()) {
-      alert('Phone Number ID and WhatsApp Business Account ID are required');
-      return;
-    }
-    if (!editing && !form.accessToken.trim()) {
-      alert('Permanent Access Token is required');
-      return;
-    }
-    if (!form.verifyToken.trim()) {
-      alert('Webhook Verify Token is required');
-      return;
+    if (form.provider === 'cloud') {
+      if (!form.phoneNumberId.trim() || !form.wabaId.trim()) {
+        alert('Phone Number ID and WhatsApp Business Account ID are required');
+        return;
+      }
+      if (!editing && !form.accessToken.trim()) {
+        alert('Permanent Access Token is required');
+        return;
+      }
+      if (!form.verifyToken.trim()) {
+        alert('Webhook Verify Token is required');
+        return;
+      }
+    } else {
+      if (!form.displayPhoneNumber.trim()) {
+        alert('Display Phone Number is required for WhatsApp Web connection');
+        return;
+      }
     }
     setSaving(true);
     try {
@@ -821,7 +859,7 @@ function WhatsappAccountsTab() {
         <div>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: 0 }}>WhatsApp Account</h2>
           <p style={{ fontSize: 12, color: C.textMuted, margin: '4px 0 0' }}>
-            The single Business Account (WABA) used to send templates, broadcasts and automation messages.
+            The single WhatsApp Account used to send templates, broadcasts and automation messages.
           </p>
         </div>
         {/* Single-account system: connecting is only possible when none exists yet. */}
@@ -844,70 +882,94 @@ function WhatsappAccountsTab() {
           border: `1px dashed ${C.border}`, borderRadius: 12, color: C.textMuted, fontSize: 13,
         }}>
           <MessageSquare size={36} style={{ opacity: 0.5, marginBottom: 12 }} />
-          <div style={{ marginBottom: 6, color: C.textSecondary, fontWeight: 600 }}>No WhatsApp Business account connected yet</div>
-          <div>Connect your WhatsApp Business account to start creating templates and broadcasts.</div>
+          <div style={{ marginBottom: 6, color: C.textSecondary, fontWeight: 600 }}>No WhatsApp account connected yet</div>
+          <div>Connect your WhatsApp account to start sending messages.</div>
         </div>
       ) : (
-        <div style={{ background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'var(--c-hover)', borderBottom: `1px solid ${C.border}` }}>
-                <th style={thStyle}>Display name</th>
-                <th style={thStyle}>Phone number</th>
-                <th style={thStyle}>Phone number ID</th>
-                <th style={thStyle}>WABA ID</th>
-                <th style={thStyle}>Access token</th>
-                <th style={thStyle}>Health</th>
-                <th style={thStyle}>Status</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.map(acc => (
-                <tr key={acc.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                  <td style={tdStyle}>
-                    <span style={{ fontWeight: 600 }}>{acc.displayName}</span>
-                  </td>
-                  <td style={tdStyle}>{maskPhone(acc.displayPhoneNumber)}</td>
-                  <td style={{ ...tdStyle, fontFamily: 'DM Mono, monospace', fontSize: 11 }}>{acc.phoneNumberId}</td>
-                  <td style={{ ...tdStyle, fontFamily: 'DM Mono, monospace', fontSize: 11 }}>{acc.wabaId}</td>
-                  <td style={{ ...tdStyle, fontFamily: 'DM Mono, monospace', fontSize: 11, color: C.textMuted }}>{acc.accessTokenMasked}</td>
-                  <td style={tdStyle}>
-                    {(() => {
-                      const h = acc.healthStatus || 'unknown';
-                      const styles = {
-                        healthy: { bg: '#E1F5EE', fg: '#0F6E56', label: 'Healthy' },
-                        invalid_token: { bg: '#FCEBEB', fg: '#A32D2D', label: 'Token expired' },
-                        rate_limited: { bg: '#FFF3E0', fg: '#E65100', label: 'Rate limited' },
-                        unknown_error: { bg: '#FCEBEB', fg: '#A32D2D', label: 'Error' },
-                        unknown: { bg: '#EEEDE8', fg: C.textMuted, label: 'Not checked' },
-                      };
-                      const s = styles[h] || styles.unknown;
-                      return (
-                        <span title={acc.lastErrorMessage || ''} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 99, fontWeight: 600, background: s.bg, color: s.fg }}>
-                          {s.label}
-                        </span>
-                      );
-                    })()}
-                  </td>
-                  <td style={tdStyle}>
-                    <span style={{
-                      fontSize: 11, padding: '3px 8px', borderRadius: 99, fontWeight: 600,
-                      background: acc.isActive ? '#E1F5EE' : '#EEEDE8',
-                      color: acc.isActive ? '#0F6E56' : C.textMuted,
-                    }}>
-                      {acc.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td style={{ ...tdStyle, textAlign: 'right' }}>
-                    <button onClick={() => startEdit(acc)} style={iconBtnStyle} title="Edit / update token">
-                      <Eye size={14} />
-                    </button>
-                  </td>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: 'var(--c-hover)', borderBottom: `1px solid ${C.border}` }}>
+                  <th style={thStyle}>Display name</th>
+                  <th style={thStyle}>Phone number</th>
+                  <th style={thStyle}>Provider</th>
+                  <th style={thStyle}>Phone number ID</th>
+                  <th style={thStyle}>Health</th>
+                  <th style={thStyle}>Status</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {accounts.map(acc => (
+                  <tr key={acc.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                    <td style={tdStyle}>
+                      <span style={{ fontWeight: 600 }}>{acc.displayName}</span>
+                    </td>
+                    <td style={tdStyle}>{maskPhone(acc.displayPhoneNumber)}</td>
+                    <td style={tdStyle}>
+                      <span style={{ fontSize: 12, padding: '3px 8px', borderRadius: 6, background: 'var(--c-hover)', fontWeight: 600 }}>
+                        {acc.provider === 'web' ? 'WhatsApp Web' : 'Cloud API'}
+                      </span>
+                    </td>
+                    <td style={{ ...tdStyle, fontFamily: 'DM Mono, monospace', fontSize: 11 }}>{acc.phoneNumberId}</td>
+                    <td style={tdStyle}>
+                      {(() => {
+                        const h = acc.healthStatus || 'unknown';
+                        const styles = {
+                          healthy: { bg: '#E1F5EE', fg: '#0F6E56', label: 'Healthy' },
+                          invalid_token: { bg: '#FCEBEB', fg: '#A32D2D', label: 'Token expired' },
+                          rate_limited: { bg: '#FFF3E0', fg: '#E65100', label: 'Rate limited' },
+                          unknown_error: { bg: '#FCEBEB', fg: '#A32D2D', label: 'Error' },
+                          unknown: { bg: '#EEEDE8', fg: C.textMuted, label: 'Not checked' },
+                        };
+                        const s = styles[h] || styles.unknown;
+                        return (
+                          <span title={acc.lastErrorMessage || ''} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 99, fontWeight: 600, background: s.bg, color: s.fg }}>
+                            {s.label}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td style={tdStyle}>
+                      <span style={{
+                        fontSize: 11, padding: '3px 8px', borderRadius: 99, fontWeight: 600,
+                        background: acc.isActive ? '#E1F5EE' : '#EEEDE8',
+                        color: acc.isActive ? '#0F6E56' : C.textMuted,
+                      }}>
+                        {acc.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>
+                      <button onClick={() => startEdit(acc)} style={iconBtnStyle} title="Edit / update token">
+                        <Eye size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {accounts.some(a => a.provider === 'web') && (
+            <div style={{ background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 10, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>WhatsApp Web Connection</h3>
+              {qrCode === 'CONNECTED' ? (
+                <div style={{ color: C.green, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Check size={20} /> Device is connected
+                </div>
+              ) : qrCode ? (
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 13, color: C.textSecondary, marginBottom: 16 }}>Scan this QR code with your WhatsApp app (Linked Devices) to connect.</p>
+                  <img src={qrCode} alt="WhatsApp QR Code" style={{ width: 256, height: 256, border: `1px solid ${C.border}`, borderRadius: 8 }} />
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: C.textMuted, fontSize: 13 }}>
+                  <Loader2 size={16} className="spin" /> Waiting for QR code...
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -917,77 +979,108 @@ function WhatsappAccountsTab() {
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--c-cardBg)', borderRadius: 14, width: 520, maxHeight: '90vh', overflow: 'auto', boxShadow: C.shadowLg, padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
               <h3 style={{ fontSize: 18, fontWeight: 700, color: C.text, margin: 0 }}>
-                {editing ? 'Edit WhatsApp Business account' : 'Add WhatsApp Business account'}
+                {editing ? 'Edit WhatsApp Account' : 'Add WhatsApp Account'}
               </h3>
               <button onClick={() => setShowForm(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: C.textMuted }}><X size={20} /></button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              {/* API Credentials */}
+              
               <div>
-                <h4 style={sectionTitleStyle}>API Credentials</h4>
-                <p style={sectionSubStyle}>Enter your WhatsApp Cloud API credentials (from Meta Business Suite).</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <div>
-                    <label style={labelStyle}>Phone Number ID</label>
-                    <input style={{ ...inpStyle, fontFamily: MONO }} value={form.phoneNumberId} onChange={e => setForm({ ...form, phoneNumberId: e.target.value })} placeholder="e.g. 100234567890123" autoFocus autoComplete="off" name="wa-phone-number-id" inputMode="numeric" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>WhatsApp Business Account ID</label>
-                    <input style={{ ...inpStyle, fontFamily: MONO }} value={form.wabaId} onChange={e => setForm({ ...form, wabaId: e.target.value })} placeholder="e.g. 100234567890456" autoComplete="off" name="wa-waba-id" inputMode="numeric" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>
-                      Permanent Access Token {editing && <span style={hintInline}>(leave blank to keep existing)</span>}
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        style={{ ...inpStyle, paddingRight: 38, fontFamily: MONO, fontSize: 12 }}
-                        type={showToken ? 'text' : 'password'}
-                        value={form.accessToken}
-                        onChange={e => setForm({ ...form, accessToken: e.target.value })}
-                        placeholder={editing ? '••••••••' : 'Enter your access token'}
-                        autoComplete="new-password"
-                        name="wa-system-user-token"
-                      />
-                      <button type="button" onClick={() => setShowToken(s => !s)} style={eyeBtnStyle}>
-                        {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
-                      </button>
-                    </div>
-                    <div style={{ ...hintRow, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Key size={10} /> Encrypted at rest with AES-256-GCM.
-                    </div>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Webhook Verify Token</label>
-                    <input style={inpStyle} value={form.verifyToken} onChange={e => setForm({ ...form, verifyToken: e.target.value })} placeholder="Create a custom verify token" autoComplete="off" name="wa-verify-token" />
-                    <div style={hintRow}>A custom string you create. Must match the token you set in Meta webhook settings.</div>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Meta App ID <span style={hintInline}>(only required for media-header templates)</span></label>
-                    <input style={{ ...inpStyle, fontFamily: MONO }} value={form.metaAppId} onChange={e => setForm({ ...form, metaAppId: e.target.value })} placeholder="e.g. 1191602295745986 (15–16 digits)" autoComplete="off" name="meta-app-id" inputMode="numeric" />
-                    <div style={hintRow}>From Meta App Dashboard → App Settings → Basic → App ID. Needed for uploading image/video/document template headers.</div>
-                  </div>
+                <label style={labelStyle}>Connection Type</label>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                    <input type="radio" name="provider" value="cloud" checked={form.provider === 'cloud'} onChange={e => setForm({...form, provider: 'cloud'})} />
+                    Official Cloud API
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                    <input type="radio" name="provider" value="web" checked={form.provider === 'web'} onChange={e => setForm({...form, provider: 'web'})} />
+                    WhatsApp Web (QR Scan)
+                  </label>
                 </div>
               </div>
 
-              {/* Webhook Configuration */}
-              <div>
-                <h4 style={sectionTitleStyle}>Webhook Configuration</h4>
-                <p style={sectionSubStyle}>Use this URL as your webhook callback in the Meta App Dashboard.</p>
-                <label style={labelStyle}>Webhook Callback URL</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input
-                    readOnly
-                    value={webhookUrl}
-                    onFocus={e => e.target.select()}
-                    style={{ ...inpStyle, fontFamily: MONO, fontSize: 12, background: 'var(--c-hover)', color: C.textSecondary }}
-                  />
-                  <button type="button" onClick={copyWebhookUrl} title={copied ? 'Copied!' : 'Copy URL'} style={copyBtnStyle}>
-                    {copied ? <Check size={15} /> : <Copy size={15} />}
-                  </button>
+              {form.provider === 'cloud' ? (
+                <>
+                  {/* API Credentials */}
+                  <div>
+                    <h4 style={sectionTitleStyle}>API Credentials</h4>
+                    <p style={sectionSubStyle}>Enter your WhatsApp Cloud API credentials (from Meta Business Suite).</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      <div>
+                        <label style={labelStyle}>Phone Number ID</label>
+                        <input style={{ ...inpStyle, fontFamily: MONO }} value={form.phoneNumberId} onChange={e => setForm({ ...form, phoneNumberId: e.target.value })} placeholder="e.g. 100234567890123" autoFocus autoComplete="off" name="wa-phone-number-id" inputMode="numeric" />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>WhatsApp Business Account ID</label>
+                        <input style={{ ...inpStyle, fontFamily: MONO }} value={form.wabaId} onChange={e => setForm({ ...form, wabaId: e.target.value })} placeholder="e.g. 100234567890456" autoComplete="off" name="wa-waba-id" inputMode="numeric" />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>
+                          Permanent Access Token {editing && <span style={hintInline}>(leave blank to keep existing)</span>}
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <input
+                            style={{ ...inpStyle, paddingRight: 38, fontFamily: MONO, fontSize: 12 }}
+                            type={showToken ? 'text' : 'password'}
+                            value={form.accessToken}
+                            onChange={e => setForm({ ...form, accessToken: e.target.value })}
+                            placeholder={editing ? '••••••••' : 'Enter your access token'}
+                            autoComplete="new-password"
+                            name="wa-system-user-token"
+                          />
+                          <button type="button" onClick={() => setShowToken(s => !s)} style={eyeBtnStyle}>
+                            {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                        </div>
+                        <div style={{ ...hintRow, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Key size={10} /> Encrypted at rest with AES-256-GCM.
+                        </div>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Webhook Verify Token</label>
+                        <input style={inpStyle} value={form.verifyToken} onChange={e => setForm({ ...form, verifyToken: e.target.value })} placeholder="Create a custom verify token" autoComplete="off" name="wa-verify-token" />
+                        <div style={hintRow}>A custom string you create. Must match the token you set in Meta webhook settings.</div>
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Meta App ID <span style={hintInline}>(only required for media-header templates)</span></label>
+                        <input style={{ ...inpStyle, fontFamily: MONO }} value={form.metaAppId} onChange={e => setForm({ ...form, metaAppId: e.target.value })} placeholder="e.g. 1191602295745986 (15–16 digits)" autoComplete="off" name="meta-app-id" inputMode="numeric" />
+                        <div style={hintRow}>From Meta App Dashboard → App Settings → Basic → App ID. Needed for uploading image/video/document template headers.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Webhook Configuration */}
+                  <div>
+                    <h4 style={sectionTitleStyle}>Webhook Configuration</h4>
+                    <p style={sectionSubStyle}>Use this URL as your webhook callback in the Meta App Dashboard.</p>
+                    <label style={labelStyle}>Webhook Callback URL</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input
+                        readOnly
+                        value={webhookUrl}
+                        onFocus={e => e.target.select()}
+                        style={{ ...inpStyle, fontFamily: MONO, fontSize: 12, background: 'var(--c-hover)', color: C.textSecondary }}
+                      />
+                      <button type="button" onClick={copyWebhookUrl} title={copied ? 'Copied!' : 'Copy URL'} style={copyBtnStyle}>
+                        {copied ? <Check size={15} /> : <Copy size={15} />}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <h4 style={sectionTitleStyle}>WhatsApp Web Configuration</h4>
+                  <p style={sectionSubStyle}>Connect by scanning a QR code with your phone. Note: This requires the server to keep a session alive.</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div>
+                      <label style={labelStyle}>Your Phone Number</label>
+                      <input style={{ ...inpStyle, fontFamily: MONO }} value={form.displayPhoneNumber} onChange={e => setForm({ ...form, displayPhoneNumber: e.target.value })} placeholder="e.g. 1234567890" autoFocus autoComplete="off" name="wa-display-phone" inputMode="numeric" />
+                      <div style={hintRow}>Include country code without +, e.g., 919876543210</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 22 }}>
